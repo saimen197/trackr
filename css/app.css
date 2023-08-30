@@ -1,0 +1,54 @@
+h1 {
+  text-align: center;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: normal;
+}
+
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 15px;
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+li:hover, .selected {
+    background-color: #eee;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.active-filter {
+    background-color: #ddd;  /* Grey background for visual differentiation */
+    font-weight: bold;       /* Make the text bold */
+    border: 2px solid black; /* Add a border for more emphasis */
+}
+
+.input-number {
+    width: 30px;
+}

@@ -1,0 +1,34 @@
+.bar {
+    width: 200px;
+    height: 20px;
+    background: #e0e0e0;
+    position: relative;
+    display: flex; /* add flex to center the text */
+    align-items: center; /* vertically center the text */
+    justify-content: center; /* horizontally center the text */
+    overflow: visible;
+}
+
+.bar span {
+    position: absolute; /* make the text positioned to ensure it stays centered */
+    z-index: 1; /* ensure the text is above the .filled bar */
+    color: #000; /* or any desired text color */
+    font-size: 12px; /* adjust as needed */
+}
+
+.filled {
+    height: 100%;
+    position: relative;
+    z-index: 0;
+}
+
+.bar::after {
+    content: "";
+    position: absolute;
+    top: -2px;  /* Adjust according to the border */
+    bottom: -2px;
+    left: 100%;  /* Position it at the end of .bar */
+    width: 2px;  /* Border width */
+    background: black;  /* Border color */
+    z-index: 0.5;  /* Ensure it overlays the .filled bar */
+}
