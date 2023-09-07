@@ -1,5 +1,7 @@
-async function customFetch(url, options = {}) {
-    // No need to set Authorization header; cookies are sent automatically.
+//import config from './apiConfig';
+//import { authEvents } from './authEvents';
+
+const customFetch = async (url, options = {}) => {
 
     let response = await fetch(url, { ...options, credentials: 'include' });
 
@@ -8,14 +10,16 @@ async function customFetch(url, options = {}) {
             method: 'POST',
             credentials: 'include'  // Ensure cookies are sent with the request.
         });
+        console.log('Refresh response: ', refreshResponse)
 
         if (!refreshResponse.ok) {
-            // Handle refresh token failure, e.g., redirect to login or clear any client-side session data.
-            window.location.href = '/login'; // Redirecting to login page for simplicity.
+            //config.redirectToLogin();
+            //authEvents.emit('unauthenticated');
+            const event = new CustomEvent('unauthenticated');
+            window.dispatchEvent(event);
+
             throw new Error('Session expired. Please login again.');
         }
-
-        // No need to extract and set the new access token. It's automatically stored in the cookie.
 
         // Retry the API call
         response = await fetch(url, { ...options, credentials: 'include' });
@@ -26,7 +30,7 @@ async function customFetch(url, options = {}) {
         throw new Error(errorData.message || 'An error occurred');
     }
 
-    //return response.json();
+    return response;
 }
 
 
@@ -297,7 +301,8 @@ export const registerUser = (userData) => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify(userData),
+        credentials: 'include'  
     })
         .then(response => {
             if (!response.ok) {
@@ -313,12 +318,13 @@ export const registerUser = (userData) => {
 
 export const loginUser = async (credentials) => {
     console.log(credentials);
-    const response = await customFetch('/api/users/login', {
+    const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify(credentials),
+        credentials: 'include'  
     });
 
     if (!response.ok) {
@@ -335,7 +341,8 @@ export const logoutUser = async (refreshToken) => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken })
+        body: JSON.stringify({ refreshToken }),
+        credentials: 'include'  
     });
 
     if (!response.ok) {
@@ -344,4 +351,18 @@ export const logoutUser = async (refreshToken) => {
     }
 
     return response.json();
+};
+
+export const checkAuthStatus = async () => {
+   try {
+       const response = await customFetch('/api/users/checkAuthStatus');
+       if (!response.ok) {
+           const errorData = await response.json();
+           throw new Error(errorData.message || 'Server error during auth check.');
+       }
+       return await response.json();
+   } catch (error) {
+       console.error("Error checking auth status:", error);
+       throw error;
+   }
 };

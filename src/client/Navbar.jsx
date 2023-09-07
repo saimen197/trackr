@@ -6,19 +6,16 @@ import { toast } from 'react-toastify';
 import { logoutUser } from './api';
 
 function Navbar() {
-  const { setIsLoggedIn, setUserId, setAccessToken, setRefreshToken, isLoggedIn, refreshToken } = useAuth();
+  const { setIsLoggedIn, setUserId, setAccessToken, setRefreshToken, isLoggedIn, refreshToken, redirectToLogin } = useAuth();
   const navigate = useNavigate();
 
 const handleLogout = async () => {
   try {
     // Send the refresh token to invalidate it server-side
-    const result = await logoutUser(refreshToken); // replace with where you're storing the refresh token
+    const result = await logoutUser(); // replace with where you're storing the refresh token
 
     // Clear authentication-related states
-    setIsLoggedIn(false);
-    setUserId(null);
-    setAccessToken(null);
-    setRefreshToken(null);
+    redirectToLogin();
 
     // Redirect to login page
     navigate('/login');

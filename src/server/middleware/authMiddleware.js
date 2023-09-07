@@ -8,7 +8,7 @@ const authenticateJWT = (req, res, next) => {
     if (token) {
         jwt.verify(token, jwtSecret, (err, user) => {
             if (err) {
-                return res.sendStatus(403); // Forbidden
+                res.status(403).json({ error: 'Invalid token' });
             }
             req.user = user;
             next();
