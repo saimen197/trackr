@@ -22,6 +22,9 @@ export const MealProvider = ({ children }) => {
   const openMealCreationModal = () => setIsMealCreationOpen(true);
   const closeMealCreationModal = () => setIsMealCreationOpen(false);
 
+  const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedMealId, setSelectedMealId] = useState(null);
+
   const closeModal = () => {
     setCurrentIngredient(null);
     setAmount('');
@@ -60,7 +63,11 @@ export const MealProvider = ({ children }) => {
         amount,
         setAmount,
         isIngredientModalOpen,
-        setIngredientModalOpen
+        setIngredientModalOpen,
+        isDatePickerOpen,
+        setDatePickerOpen,
+        selectedMealId,
+        setSelectedMealId
       }}>
       {children}
     </MealContext.Provider>

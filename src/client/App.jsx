@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
 import Layout from './Layout';
@@ -9,13 +9,8 @@ import MealCreation from './components/MealCreation';
 import Login from './components/Login';
 import Register from './components/Register';
 import { MealProvider } from '/src/client/context/MealContext.jsx';
-import { checkAuthStatus } from './api';
 import { ToastContainer } from 'react-toastify';
 import { useAuth } from './context/AuthContext';
-import { setRedirectToLogin } from './apiConfig';
-import { BeatLoader } from 'react-spinners';
-import { toast } from 'react-toastify';
-//import { authEvents } from './authEvents';
 
 function requireAuth(Component) {
   return function ProtectedComponent(props) {
@@ -60,34 +55,6 @@ function ProtectedRoutes() {
 }
 
 const App = () => {
-  const [isAuth, setIsAuth] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // initialize with null
-  const { redirectToLogin } = useAuth();
-  const navigate = useNavigate();
-
-
-
-  /*useEffect(() => {
-      setRedirectToLogin(redirectToLogin);
-
-      checkAuthStatus()
-          .then(authStatus => {
-            setIsAuth(authStatus);
-            setLoading(false);
-          })
-          .catch(err => {
-            const errorMessage = err.message || "An error occurred while checking authentication status.";
-            toast.error(errorMessage);
-            setLoading(false);
-          });
-  }, []);
-
-  if (loading) {
-    return <BeatLoader />; // or any other loader component you want to display
-  }*/
-
-
   return (
     <Layout>
       <ToastContainer 
@@ -104,7 +71,7 @@ const App = () => {
       <MealProvider>
         <Routes>
           <Route path='/login' element={<Login />} />
-          {ProtectedRoutes(navigate)} 
+          {ProtectedRoutes()} 
         </Routes>
       </MealProvider>
     </Layout>

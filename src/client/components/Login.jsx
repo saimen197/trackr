@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { loginUser } from '../api';
 
 function Login() {
-    const { setUserId, setIsLoggedIn, setNeedsRedirect } = useAuth();
+    const { setUserId, setIsLoggedIn, setNeedsRedirect, setUsernameLoggedIn } = useAuth();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -17,6 +17,7 @@ function Login() {
             console.log(response);
             if (response && response.user) {
                 setUserId(response.user.id); // Assuming the user object has an 'id' property
+                setUsernameLoggedIn(response.user.username);
                 setIsLoggedIn(true);
                 setNeedsRedirect(false);
                 toast.success("Logged in successfully!");

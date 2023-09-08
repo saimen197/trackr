@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { logoutUser } from './api';
 
 function Navbar() {
-  const { setIsLoggedIn, setUserId, setAccessToken, setRefreshToken, isLoggedIn, refreshToken, redirectToLogin } = useAuth();
+  const { isLoggedIn, redirectToLogin, usernameLoggedIn } = useAuth();
   const navigate = useNavigate();
 
 const handleLogout = async () => {
@@ -33,13 +33,13 @@ const handleLogout = async () => {
   return (
     <nav className="navbar">
       <ul>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/main">Main</Link></li>
-        <li><Link to="/ingredient">Create Ingredient</Link></li>
-        <li><Link to="/meal">Create Meal</Link></li>
-        <li><Link to="/analysis">Analysis</Link></li>
-        {/* Conditionally render the Logout button if the user is logged in */}
-        {isLoggedIn && <li><button onClick={handleLogout}>Logout</button></li>}
+        {/*<li><Link to="/">Home</Link></li>
+          <li><Link to="/main">Main</Link></li>
+          <li><Link to="/ingredient">Create Ingredient</Link></li>
+          <li><Link to="/meal">Create Meal</Link></li>
+          <li><Link to="/analysis">Analysis</Link></li>
+         Conditionally render the Logout button if the user is logged in */}
+        {isLoggedIn && <li> Hello {usernameLoggedIn} <button onClick={handleLogout}>Logout</button></li>}
       </ul>
     </nav>
   );

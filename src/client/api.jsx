@@ -1,7 +1,5 @@
-//import config from './apiConfig';
-//import { authEvents } from './authEvents';
 
-const customFetch = async (url, options = {}) => {
+const customFetch = async (url, options = {}) => {    
 
     let response = await fetch(url, { ...options, credentials: 'include' });
 
@@ -15,8 +13,9 @@ const customFetch = async (url, options = {}) => {
         if (!refreshResponse.ok) {
             //config.redirectToLogin();
             //authEvents.emit('unauthenticated');
-            const event = new CustomEvent('unauthenticated');
-            window.dispatchEvent(event);
+           // const event = new CustomEvent('unauthenticated');
+            //window.dispatchEvent(event);
+            //setIsLoggedIn(false);
 
             throw new Error('Session expired. Please login again.');
         }

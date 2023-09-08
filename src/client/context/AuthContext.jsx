@@ -6,6 +6,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
   const [needsRedirect, setNeedsRedirect] = useState(false);
+  const [usernameLoggedIn, setUsernameLoggedIn] = useState(false);
 
   const redirectToLogin = () => {
     setIsLoggedIn(false);
@@ -14,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, redirectToLogin, setNeedsRedirect, needsRedirect }}>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, redirectToLogin, setNeedsRedirect, needsRedirect, setUsernameLoggedIn, usernameLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );
