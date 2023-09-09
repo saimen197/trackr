@@ -2,15 +2,6 @@ const express = require('express');
 const db = require('../db/database.js');
 const router = express.Router();
 
-router.get('/units', (req, res, next) => {
-    try {
-        const units = db.prepare('SELECT * FROM units').all();
-        res.json(units);
-    } catch (error) {
-        console.error("Error:", error.message);
-        next(error); // Propagate the error to the middleware
-    }
-});
 
 // Retrieve all meals 
 router.get('/all', (req, res, next) => {

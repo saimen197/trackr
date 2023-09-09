@@ -3,6 +3,18 @@ const db = require('../db/database.js');
 
 const router = express.Router();
 
+
+router.get('/units', (req, res, next) => {
+    try {
+        const units = db.prepare('SELECT * FROM units').all();
+        res.json(units);
+    } catch (error) {
+        console.error("Error:", error.message);
+        next(error); // Propagate the error to the middleware
+    }
+});
+
+
 router.get('/', (req, res, next) => {
     try {
         const getIngredients = db.prepare('SELECT * FROM ingredients');
@@ -75,5 +87,41 @@ router.put('/deactivate/:id', (req, res, next) => {
     }
 });
 
+router.get('/byName/:name', (req, res, next) => {
+    const ingredientName = req.params.name;
 
+    try {
+        const getIngredient = db.prepare('SELECT id FROM ingredients WHERE name = ?');
+        const ingredient = getIngredient.get(ingredientName);
+        
+        if (!ingredient) {
+            return res.status(404).json({ message: 'Ingredient not found' });
+        }
+
+        res.status(200).json({ ingredientId: ingredient.id });
+        
+    } catch (error) {
+        console.error("Error:", error.message);
+        next(error);
+    }
+});
+
+router.get('/units/byName/:name', (req, res, next) => {
+    const unitName = req.params.name;
+
+    try {
+        const getUnit = db.prepare('SELECT id FROM units WHERE name = ?');
+        const unit = getUnit.get(unitName);
+        
+        if (!unit) {
+            return res.status(404).json({ message: 'Unit not found' });
+        }
+
+        res.status(200).json({ unitId: unit.id });
+        
+    } catch (error) {
+        console.error("Error:", error.message);
+        next(error);
+    }
+});
 module.exports = router;

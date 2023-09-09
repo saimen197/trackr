@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMealById, fetchRecentUserMealIntake, deactivateMeal, updateMealName, updateMealInfo, updateMealType, updateMealServings } from '../api';
-
+import MealCreation from './MealCreation'; 
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,7 +21,13 @@ function MealsList() {
         isDatePickerOpen,
         setDatePickerOpen,
         selectedMealId, 
-        setSelectedMealId
+        setSelectedMealId,
+        addedMealName,
+        setAddedMealName,
+        addedMealInfo,
+        setAddedMealInfo,
+        addedMealIngredients,
+        setAddedMealIngredients
     } = useMeals();
 
     const [expandedMealId, setExpandedMealId] = useState(null);
@@ -36,7 +42,9 @@ function MealsList() {
     useEffect(() => {        
         if(newMealId) {
             refreshMeals();
-            handleAddButtonClick(newMealId);
+            console.log('refreshedmeals');
+            setDatePickerOpen(true);
+            //handleAddButtonClick(newMealId);
             setNewMealId(null);         
         }
     }, [newMealId]);
@@ -44,11 +52,17 @@ function MealsList() {
     useEffect(() => {
         // Fetch all meals when the component mounts
         refreshMeals();
+
     }, []);
 
-    const handleAddButtonClick = (mealId) => {
+    const handleAddButtonClick = (mealId, mealName, mealInfo, mealIngredients) => {
         setSelectedMealId(mealId);
-        setDatePickerOpen(true);
+        openMealCreationModal();
+        setAddedMealName(mealName);
+        setAddedMealInfo(mealInfo);
+        setAddedMealIngredients(mealIngredients);
+        console.log('addedMealIngredients: ', addedMealIngredients);
+        //setDatePickerOpen(true);
     };
 
     const handleMealClick = (mealId) => {
@@ -240,7 +254,7 @@ function MealsList() {
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleAddButtonClick(meal.id);
+                                                    handleAddButtonClick(meal.id, meal.name, meal.info, meal.ingredients);
                                                 }}
                                             >
                                                 Add to daily intake
@@ -305,7 +319,19 @@ function MealsList() {
                 </div>
             ))}
         </ul>
-      </> 
+            {isMealCreationOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <button onClick={() => closeMealCreationModal()}>Close</button>
+                            <MealCreation 
+                                initialMealName={addedMealName}
+                                initialDescription={addedMealInfo}
+                                initialMealIngredients={addedMealIngredients}
+                            />
+                    </div>
+                </div>
+            )}
+      </>       
     );
 }
 

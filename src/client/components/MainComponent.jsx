@@ -47,7 +47,6 @@ function MainComponent() {
         };
     }, []);
 
-
     const updateRecentIntake = async () => {
         try {
             const data = await fetchRecentUserMealIntake();
@@ -128,9 +127,7 @@ function MainComponent() {
             
                 <RecentMealIntake recentIntake={recentIntake} handleDeleteUserMealIntake={handleDeleteUserMealIntake} />
             </div> 
-            <h2>Log Meals</h2> 
-            
-
+            <h2>Log Meals</h2>           
 
             <MealsList/>
  
@@ -138,20 +135,10 @@ function MainComponent() {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <AddIntakeModal 
-                            //isOpen={isDatePickerOpen} 
+                            isOpen={isDatePickerOpen} 
                             onConfirm={handleDateConfirm}
                             onCancel={() => setDatePickerOpen(false)}
                         />
-                    </div>
-                </div>
-            )}
-
-
-            {isMealCreationOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <button onClick={() => closeMealCreationModal(false)}>Close</button>
-                        <MealCreation />
                     </div>
                 </div>
             )}

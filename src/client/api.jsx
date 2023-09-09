@@ -11,11 +11,6 @@ const customFetch = async (url, options = {}) => {
         console.log('Refresh response: ', refreshResponse)
 
         if (!refreshResponse.ok) {
-            //config.redirectToLogin();
-            //authEvents.emit('unauthenticated');
-           // const event = new CustomEvent('unauthenticated');
-            //window.dispatchEvent(event);
-            //setIsLoggedIn(false);
 
             throw new Error('Session expired. Please login again.');
         }
@@ -36,7 +31,7 @@ const customFetch = async (url, options = {}) => {
 //Ingredient routes
 
 export const getUnits = () => {
-    return customFetch('/api/meals/units')
+    return customFetch('/api/ingredients/units')
         .then(response => {
             if (!response.ok) {
                 return response.json().then(err => { throw err; });
@@ -95,6 +90,40 @@ export const deactivateIngredient = async (ingredientId) => {
     }
 
     return response.json();
+};
+
+export const getIngredientIdByName = async (name) => {
+    try {
+        const response = await customFetch(`/api/ingredients/byName/${name}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Error fetching ingredient ID by name');
+        }
+
+        return data.ingredientId;
+    } catch (error) {
+        console.error("Error fetching ingredient ID by name:", error);
+        throw error;
+    }
+};
+
+export const getUnitIdByName = async (unitName) => {
+    try {
+        const response = await customFetch(`/api/ingredients/units/byName/${unitName}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message);
+        }
+
+        const responseData = await response.json();
+        const { unitId } = responseData;
+        return unitId;
+    } catch (error) {
+        console.error("Error fetching unit ID by name:", error);
+        throw error;
+    }
 };
 
 //Meal routes

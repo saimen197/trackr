@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { getIngredients, createMeal, getUnits, deactivateIngredient } from '../api';
+import { getIngredients, createMeal, getUnits, deactivateIngredient, getIngredientIdByName, getUnitIdByName } from '../api';
 import IngredientCreation from './IngredientCreation';
 import { useTable, useSortBy } from 'react-table';
 import '../../../css/app.css';
@@ -11,12 +11,13 @@ import Modal from 'react-modal';
 //Modal.setAppElement('#contents');
 
 
-function MealCreation() {
+function MealCreation({ initialMealName = '', initialDescription = '', initialMealIngredients = [] }) {
     const isMounted = useRef(true);
 
     const [ingredients, setIngredients] = useState([]);
      
     const [mealIngredients, setMealIngredients] = useState([]);
+
     const [totals, setTotals] = useState({
         calories: 0,
         protein: 0,
@@ -51,7 +52,8 @@ function MealCreation() {
         amount,
         setAmount,
         isIngredientModalOpen,
-        setIngredientModalOpen
+        setIngredientModalOpen,
+        setDatePickerOpen
     } = useMeals();
     
     useEffect(() => {
@@ -96,16 +98,77 @@ function MealCreation() {
             });
     }, []);
 
+    useEffect(() => {
+        setMealIngredients(initialMealIngredients);
+        setDescription(initialDescription);
+        setMealName(initialMealName);
+    }, [initialMealName, initialDescription, initialMealIngredients]);
 
-    const refreshIngredients = () => {
-        getIngredients()
-        .then((ingredients) => {
-            setIngredients(ingredients);
-        })
-        .catch((error) => {
-            console.error("Error fetching meals:", error);
-        });
-    };
+    useEffect(() => {
+        // Define the async function within the useEffect
+        const normalizeIngredients = async () => {
+            try {
+                const { normalizedIngredients, initialTotals } = await normalizeInitialIngredients(initialMealIngredients);
+                if (isMounted.current) {
+                    setMealIngredients(normalizedIngredients);
+                    setTotals(initialTotals);
+                }
+            } catch (error) {
+                if (isMounted.current) {
+                    console.error("Error normalizing ingredients:", error);
+                }
+            }
+        };
+
+        // Call the async function
+        normalizeIngredients();
+    }, [initialMealIngredients, units]);  // This dependency ensures the effect runs once when the component mounts or when props.initialMealIngredients changes
+
+
+    const normalizeInitialIngredients = async (ingredients) => {
+        let initialTotals = {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fats: 0
+        };
+
+        const normalizedIngredients = await Promise.all(ingredients.map(async ingredient => {
+            let ingredientId, unitId, conversionFactor = 1;
+
+            try {
+                ingredientId = await getIngredientIdByName(ingredient.ingredient_name);
+                unitId = await getUnitIdByName(ingredient.unit);
+
+                // Fetch the conversion factor for the unit
+                const selectedUnit = units.find(u => u.id === unitId);
+                if (selectedUnit) {
+                    conversionFactor = selectedUnit.conversion_factor_to_gram;
+                }
+
+                // Convert the ingredient amount to grams
+                const amountInGrams = ingredient.amount * conversionFactor;
+
+                initialTotals.calories += ingredient.calories * (amountInGrams / 100);
+                initialTotals.protein += ingredient.protein * (amountInGrams / 100);
+                initialTotals.carbs += ingredient.carbs * (amountInGrams / 100);
+                initialTotals.fats += ingredient.fats * (amountInGrams / 100);
+            
+            } catch (error) {
+                console.error("Error fetching IDs:", error);
+            }
+
+            return {
+                ingredientId: ingredientId,
+                name: ingredient.ingredient_name,
+                amount: ingredient.amount,
+                unitId: unitId
+            };
+        }));
+
+        return { normalizedIngredients, initialTotals };
+    }
+
 
     const loadIngredients = async () => {
         try {
@@ -128,11 +191,16 @@ function MealCreation() {
     }
 
     const addIngredientToMeal = () => {
-
         if (!currentIngredient) {
             console.error("Ingredient not available");
             return;
         }
+
+        const isIngredientAlreadyAdded = mealIngredients.some(ing => ing.ingredientId === currentIngredient.id);
+        if (isIngredientAlreadyAdded) {
+            toast.warn("This ingredient is already added to the meal!");
+            return;
+        }        
 
         const selectedUnit = units.find(u => u.id === Number(unit));
         if (!selectedUnit) {
@@ -148,12 +216,15 @@ function MealCreation() {
         };
         setMealIngredients(prev => [...prev, newIngredient]);
 
+        // Convert the amount to grams
+        const amountInGrams = amount * selectedUnit.conversion_factor_to_gram;
+
         // Update totals
         const newTotals = {
-            calories: totals.calories + currentIngredient.calories * (amount / 100),
-            protein: totals.protein + currentIngredient.protein * (amount / 100),
-            carbs: totals.carbs + currentIngredient.carbs * (amount / 100),
-            fats: totals.fats + currentIngredient.fats * (amount / 100)
+            calories: totals.calories + currentIngredient.calories * (amountInGrams / 100),
+            protein: totals.protein + currentIngredient.protein * (amountInGrams / 100),
+            carbs: totals.carbs + currentIngredient.carbs * (amountInGrams / 100),
+            fats: totals.fats + currentIngredient.fats * (amountInGrams / 100)
         };
         setTotals(newTotals);
 
@@ -178,10 +249,14 @@ function MealCreation() {
         newIngredients.forEach(ing => {
             const baseIngredient = ingredients.find(baseIng => baseIng.id === ing.ingredientId);
             if (baseIngredient) {
-                newTotals.calories += baseIngredient.calories * (ing.amount / 100);
-                newTotals.protein += baseIngredient.protein * (ing.amount / 100);
-                newTotals.carbs += baseIngredient.carbs * (ing.amount / 100);
-                newTotals.fats += baseIngredient.fats * (ing.amount / 100);
+                // Convert the amount to grams
+                const unitForIngredient = units.find(u => u.id === ing.unitId);
+                const amountInGrams = ing.amount * (unitForIngredient ? unitForIngredient.conversion_factor_to_gram : 1);
+                
+                newTotals.calories += baseIngredient.calories * (amountInGrams / 100);
+                newTotals.protein += baseIngredient.protein * (amountInGrams / 100);
+                newTotals.carbs += baseIngredient.carbs * (amountInGrams / 100);
+                newTotals.fats += baseIngredient.fats * (amountInGrams / 100);
             }
         });
 
@@ -189,17 +264,21 @@ function MealCreation() {
     };
 
     const handleDeleteIngredient = (ingredientId) => {
-    if (window.confirm('Are you sure you want to delete this ingredient?')) {
-        deactivateIngredient(ingredientId)
-            .then(() => {
-                toast.success('Ingredient deleted successfully');
-                loadIngredients(); // This will refresh the ingredient list
-            })
-            .catch(err => {
-                toast.error('Error deleting ingredient: ' + err.message);
-            });
-    }
-};
+        if (window.confirm('Are you sure you want to delete this ingredient?')) {
+            deactivateIngredient(ingredientId)
+                .then(() => {
+                    if (isMounted.current) {
+                        toast.success('Ingredient deleted successfully');
+                        loadIngredients(); // This will refresh the ingredient list
+                    }
+                })
+                .catch(err => {
+                    if (isMounted.current) {
+                        toast.error('Error deleting ingredient: ' + err.message);
+                    }
+                });
+        }
+    };
     const openSaveModal = () => {
         setIsSaveModalOpen(true);
     }
@@ -216,7 +295,7 @@ function MealCreation() {
             console.log("Sending data:", mealData);
 
             const response = await createMeal(mealData);
-            if (response) {
+            if (response && isMounted.current) {
                 toast.success("Meal successfully created!");
                 console.log(response);
 
@@ -237,9 +316,13 @@ function MealCreation() {
                 //refreshMeals();
             }
         } catch (error) {
-            toast.error("Error creating meal: " + error.message);
+            if (isMounted.current) {
+                toast.error("Error creating meal: " + error.message);
+            }
         }
-        setIsSaveModalOpen(false);
+        if (isMounted.current) {
+            setIsSaveModalOpen(false);
+        }
     };
 
     const filteredRows = React.useMemo(() => {
@@ -274,21 +357,29 @@ function MealCreation() {
                 accessor: 'fats',
             },
             {
-                
                 accessor: 'id',
-                Cell: ({ value }) => (
-                    <div>
-                        <button onClick={() => openModal(ingredients.find(ing => ing.id === value))}>
-                            Add to Meal
-                        </button>
-                        <button onClick={() => handleDeleteIngredient(value)}>
-                            Delete
-                        </button>
-                    </div>
-                )
+                Cell: ({ value }) => {
+                    const isIngredientAdded = mealIngredients.some(ing => ing.ingredientId === value);
+
+                    return (
+                        <div>
+                            {!isIngredientAdded ? (
+                                <button onClick={() => openModal(ingredients.find(ing => ing.id === value))}>
+                                    Add to Meal
+                                </button>
+                            ) : (
+                                <button disabled>Added</button>
+                            )}
+                            <button onClick={() => handleDeleteIngredient(value)}>
+                                Delete
+                            </button>
+                        </div>
+                    );
+                }
             }
+
         ],
-        [ingredients]
+        [ingredients, mealIngredients]
     );
 
     const {
@@ -317,10 +408,9 @@ function MealCreation() {
 
             {/* List of added ingredients */}
             {mealIngredients.map((ing, index) => {
-                const ingredientUnit = units.find(u => u.id === ing.unitId);
                 return (
-                    <div key={`${ing.ingredientId}-${index}`}>
-                        {ing.amount}{ingredientUnit ? ingredientUnit.name : ''} {ing.name} 
+                    <div key={`${ing.ingredient_name || ing.name}-${index}`}>
+                        {ing.amount} {ing.unit || units.find(u => u.id === ing.unitId)?.name} {ing.ingredient_name || ing.name}
                         <button onClick={() => removeIngredientFromMeal(index)}>-</button>
                     </div>
                 );
@@ -334,8 +424,11 @@ function MealCreation() {
                 <strong>Total Fats:</strong> {totals.fats}g
             </div>
 
+            {/* Log button */}
+            <button onClick={setDatePickerOpen} disabled={!isValid}>Log Meal</button>
+
             {/* Save button */}
-            <button onClick={openSaveModal} disabled={!isValid}>Save Meal</button>
+            <button onClick={openSaveModal} disabled={!isValid}>Log and Save Meal</button>
 
             {/* Search Field */}
             <input
@@ -427,7 +520,7 @@ function MealCreation() {
                             <option value="snack">Snack</option>
                         </select>
 
-                        <button onClick={confirmSaveMeal} disabled={!isSaveValid} >Save Meal</button>
+                        <button onClick={confirmSaveMeal} disabled={!isSaveValid} >Save and Log Meal</button>
                         <button onClick={() => setIsSaveModalOpen(false)}>Cancel</button>
                     </div>
                 </div>
