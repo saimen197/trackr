@@ -12,7 +12,7 @@ export const MealProvider = ({ children }) => {
   const [isMealCreationOpen, setIsMealCreationOpen] = useState(false);
   const [newMealId, setNewMealId] = useState(null); 
   const [createdIngredientId, setCreatedIngredientId] = useState(null); 
-  const [createdIngredient, setCreatedIngredient] = useState(null); 
+  const [createdIngredient, setCreatedIngredient] = useState(false); 
 
   const [currentIngredient, setCurrentIngredient] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

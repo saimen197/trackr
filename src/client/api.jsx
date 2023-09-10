@@ -11,8 +11,9 @@ const customFetch = async (url, options = {}) => {
         console.log('Refresh response: ', refreshResponse)
 
         if (!refreshResponse.ok) {
-
-            throw new Error('Session expired. Please login again.');
+            alert('Session expired. Please login again.');
+            // Optionally, redirect the user to the login page
+            window.location.href = '/login';
         }
 
         // Retry the API call

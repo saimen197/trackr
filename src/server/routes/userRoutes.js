@@ -66,8 +66,6 @@ router.post('/login', (req, res) => {
     });
 });
 
-
-
 router.post('/logout', (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
@@ -86,10 +84,8 @@ router.post('/logout', (req, res) => {
     res.json({ message: "Logged out successfully" });
 });
 
-
 router.post('/refreshToken', (req, res) => {
     const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken);
 
     if (!refreshToken) {
         return res.status(403).json({ error: 'No token provided' });
@@ -99,12 +95,9 @@ router.post('/refreshToken', (req, res) => {
         if (err) {
             return res.status(403).json({ error: 'Failed to authenticate token' });
         }
-        console.log("Decoded Payload:", decoded);
-
 
         // Check if refreshToken is still valid in the refreshTokens table
         const storedToken = db.prepare('SELECT token FROM refreshTokens WHERE user_id = ?').get(decoded.id).token;
-        console.log('stored: ', storedToken);
         if (!storedToken || storedToken !== refreshToken) {
             return res.status(403).json({ error: 'Refresh token is not valid' });
         }
@@ -112,18 +105,17 @@ router.post('/refreshToken', (req, res) => {
         let accessToken;
         try {
             accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
-            console.log("Generated Access Token:", accessToken);
         } catch (err) {
             console.error("Error generating access token:", err);
             return res.status(500).json({ error: 'Error generating access token' });
         }
 
-        console.log(accessToken);
+        // Set the new access token in a httpOnly cookie.
+        res.cookie('token', accessToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 15 * 60 * 1000 }); // 15 minutes
         res.json({ message: 'Token refreshed' });
-        console.log(res.json);
-
     });
 });
+
 
 router.get('/checkAuthStatus', authenticateJWT, (req, res) => {
     const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.user.id);

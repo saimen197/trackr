@@ -37,13 +37,20 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     const [isSaveValid, setIsSaveValid] = useState(false);
     const [isAmountValid, setIsAmountValid] = useState(false);
     const [filterInput, setFilterInput] = useState("");
+
+    const [initialState, setInitialState] = useState([]);
+
+    const [hasChanged, setHasChanged] = useState(false);
+    const [normalized, setNormalized] = useState(false);
+    const isInitializing = useRef(true);
+
     
     const { 
         closeMealCreationModal, 
         refreshMeals, 
         setNewMealId,
-        createdIngredientId,
-        setCreatedIngredientId,
+        createdIngredient,
+        setCreatedIngredient,
         closeModal,
         currentIngredient,
         setCurrentIngredient,
@@ -53,7 +60,8 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
         setAmount,
         isIngredientModalOpen,
         setIngredientModalOpen,
-        setDatePickerOpen
+        setDatePickerOpen,
+        setSelectedMealId,
     } = useMeals();
     
     useEffect(() => {
@@ -64,7 +72,8 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
 
     useEffect(() => {
         loadIngredients();
-    }, []);
+        setCreatedIngredient(false);
+    }, [createdIngredient]);
 
     useEffect(() => {
         setIsAmountValid(amount > 0);
@@ -99,31 +108,46 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     }, []);
 
     useEffect(() => {
-        setMealIngredients(initialMealIngredients);
-        setDescription(initialDescription);
-        setMealName(initialMealName);
+        isInitializing.current = true; // Start initializing
+
+        async function initializeData() {
+            setMealIngredients(initialMealIngredients);
+            setDescription(initialDescription);
+            setMealName(initialMealName);
+
+            const { normalizedIngredients, initialTotals } = await normalizeInitialIngredients(initialMealIngredients);
+            
+            if (isMounted.current) {
+                setMealIngredients(normalizedIngredients);
+                setTotals(initialTotals);
+                setNormalized(true);  // Set normalized to true after normalization
+                isInitializing.current = false;
+            }
+        }
+        
+        initializeData();
+        
+        setInitialState({
+            mealIngredients: initialMealIngredients,
+            description: initialDescription,
+            mealName: initialMealName
+        });
+
     }, [initialMealName, initialDescription, initialMealIngredients]);
 
     useEffect(() => {
-        // Define the async function within the useEffect
-        const normalizeIngredients = async () => {
-            try {
-                const { normalizedIngredients, initialTotals } = await normalizeInitialIngredients(initialMealIngredients);
-                if (isMounted.current) {
-                    setMealIngredients(normalizedIngredients);
-                    setTotals(initialTotals);
-                }
-            } catch (error) {
-                if (isMounted.current) {
-                    console.error("Error normalizing ingredients:", error);
-                }
+        const checkForChanges = () => {
+            if (!isInitializing.current && normalized && (initialState.mealName !== mealName ||
+                initialState.description !== description ||
+                JSON.stringify(initialState.mealIngredients) !== JSON.stringify(mealIngredients))) {
+                setHasChanged(true);
+            } else {
+                setHasChanged(false);
             }
-        };
+        }
 
-        // Call the async function
-        normalizeIngredients();
-    }, [initialMealIngredients, units]);  // This dependency ensures the effect runs once when the component mounts or when props.initialMealIngredients changes
-
+        checkForChanges();
+    }, [mealName, description, mealIngredients]);
 
     const normalizeInitialIngredients = async (ingredients) => {
         let initialTotals = {
@@ -153,6 +177,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                 initialTotals.protein += ingredient.protein * (amountInGrams / 100);
                 initialTotals.carbs += ingredient.carbs * (amountInGrams / 100);
                 initialTotals.fats += ingredient.fats * (amountInGrams / 100);
+
             
             } catch (error) {
                 console.error("Error fetching IDs:", error);
@@ -311,6 +336,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                 setMealName('');
 
                 setNewMealId(response);
+                setSelectedMealId(response);
 
                 closeMealCreationModal();
                 //refreshMeals();
@@ -424,11 +450,17 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                 <strong>Total Fats:</strong> {totals.fats}g
             </div>
 
-            {/* Log button */}
+            {hasChanged? (                
+                <button onClick={openSaveModal} disabled={!isValid}> Save and Log Meal</button>
+            ) : (
+                <button onClick={setDatePickerOpen} disabled={!isValid}>Log Meal</button>
+            )}           
+
+            {/* Log button 
             <button onClick={setDatePickerOpen} disabled={!isValid}>Log Meal</button>
 
-            {/* Save button */}
-            <button onClick={openSaveModal} disabled={!isValid}>Log and Save Meal</button>
+            {/* Save button
+            <button onClick={openSaveModal} disabled={!isValid}> Save and Log Meal</button>*/}
 
             {/* Search Field */}
             <input
@@ -520,7 +552,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                             <option value="snack">Snack</option>
                         </select>
 
-                        <button onClick={confirmSaveMeal} disabled={!isSaveValid} >Save and Log Meal</button>
+                        <button onClick={confirmSaveMeal} disabled={!isSaveValid} >Save Meal</button>
                         <button onClick={() => setIsSaveModalOpen(false)}>Cancel</button>
                     </div>
                 </div>

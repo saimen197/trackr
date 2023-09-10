@@ -1,28 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { createIngredient } from '../api';
 import { useMeals } from '../context/MealContext';
 
 function IngredientCreation() {
-    const [ingredientName, setIngredientName] = useState(localStorage.getItem('name') || '');
-    const [protein, setProtein] = useState(localStorage.getItem('protein') || '');
-    const [carbs, setCarbs] = useState(localStorage.getItem('carbs') || '');
-    const [fats, setFats] = useState(localStorage.getItem('fats') || '');
-    const [calories, setCalories] = useState(localStorage.getItem('calories') || '');
+    const [ingredientName, setIngredientName] = useState('');
+    const [protein, setProtein] = useState('');
+    const [carbs, setCarbs] = useState('');
+    const [fats, setFats] = useState('');
+    const [calories, setCalories] = useState('');
 
     const { 
         setIngredientModalOpen,
         setCurrentIngredient,
-        setIsModalOpen  
+        setIsModalOpen, 
+        setCreatedIngredient  
     } = useMeals();
 
- /*    useEffect(() => {
-        localStorage.setItem('name', ingredientName);
-        localStorage.setItem('protein', protein);
-        localStorage.setItem('carbs', carbs);
-        localStorage.setItem('fats', fats);
-        localStorage.setItem('calories', calories);
-    }, [ingredientName, protein, carbs, fats, calories]);*/
+    const isMounted = useRef(true);
+
+    useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
 
     const areFieldsValid = () => {
         return ingredientName && protein && carbs && fats;
@@ -42,6 +43,7 @@ function IngredientCreation() {
         try {
             const ingredientId = await createIngredient({ name: ingredientName, calories: finalCalories, protein, carbs, fats });
             console.log("returned from api: ", ingredientId);
+            if (!isMounted.current) return; 
 
             if (ingredientId) {
                 toast.success("Ingredient successfully created!");
@@ -57,6 +59,7 @@ function IngredientCreation() {
                 setCurrentIngredient(newIngredient);
                 setIsModalOpen(true);                
                 setIngredientModalOpen(false);
+                setCreatedIngredient(true);
                 
                 // Reset the form
                 setIngredientName('');
