@@ -1,108 +1,137 @@
+const SERVER_ERROR_MSG = 'An error occurred';
+const SESSION_EXPIRED_MSG = 'Session expired. Please login again.';
 
-const customFetch = async (url, options = {}) => {    
+let isRefreshing = false;
+let failedQueue = [];
 
-    let response = await fetch(url, { ...options, credentials: 'include' });
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+}
 
-    if (response.status === 401) { // Token expired
+const handleTokenExpiry = async () => {
+    if (!isRefreshing) {
+        isRefreshing = true;
+
         const refreshResponse = await fetch('/api/users/refreshToken', {
             method: 'POST',
-            credentials: 'include'  // Ensure cookies are sent with the request.
+            credentials: 'include'
         });
-        console.log('Refresh response: ', refreshResponse)
+
+        console.log('Refresh response: ', refreshResponse);
 
         if (!refreshResponse.ok) {
-            alert('Session expired. Please login again.');
-            // Optionally, redirect the user to the login page
-            window.location.href = '/login';
+            const error = new Error(SESSION_EXPIRED_MSG);
+            processQueue(error);
+            throw error;
         }
 
-        // Retry the API call
-        response = await fetch(url, { ...options, credentials: 'include' });
+        const data = await refreshResponse.json();
+        const newToken = data.token; // Assuming the new token is returned in this manner.
+        isRefreshing = false;
+        processQueue(null, newToken);
+
+        return newToken;
     }
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'An error occurred');
-    }
+    return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+    });
+}
 
-    return response;
+const customFetch = async (url, options = {}) => {
+    try {
+        const response = await fetch(url, { ...options, credentials: 'include' });
+        if (response.status === 401) {
+            const newToken = await handleTokenExpiry();
+            options.headers = {
+                ...options.headers,
+                Authorization: `Bearer ${newToken}`
+            };
+            return fetch(url, options);
+        }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || SERVER_ERROR_MSG);
+        }
+        return response;
+    } catch (error) {
+        if (error.message === SESSION_EXPIRED_MSG) {
+            window.location.href = '/login';
+        }
+        throw error;
+    }
 }
 
 
+const processResponse = async (response) => {
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || SERVER_ERROR_MSG);
+    }
+    return await response.json();
+}
+
 //Ingredient routes
+export const getUnits = async () => {
+    try {
+        const response = await customFetch('/api/ingredients/units');
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error fetching units:", error);
+        throw error;
+    }
+};
 
-export const getUnits = () => {
-    return customFetch('/api/ingredients/units')
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw err; });
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error("Error fetching units:", error);
-            throw error;
+export const createIngredient = async (ingredientData) => {
+    try {
+        const response = await customFetch('/api/ingredients/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ingredientData)
         });
-};
-
-export const createIngredient = (ingredientData) => {
-    return customFetch('/api/ingredients/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(ingredientData)
-    })
-    .then(async response => {
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message);
-        }
-
-        const responseData = await response.json();
+        const responseData = await processResponse(response);
         const { ingredientId } = responseData;
-        console.log("Created ingredient with ID:", ingredientId);   
+        console.log("Created ingredient with ID:", ingredientId);
         return ingredientId;
-    })
-    .catch(error => {
+    } catch (error) {
         console.error("Error:", error);
-        throw error;  
-    });
+        throw error;
+    }
 };
-
 export const getIngredients = async () => {
     try {
-            const response=await customFetch('/api/ingredients');
-            return await response.json();
-        } catch(error) {
-            console.error("Error:",error);
-            throw error;
-        }
+        const response = await customFetch('/api/ingredients');
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error fetching ingredients:", error);
+        throw error;
+    }
 };
 
 export const deactivateIngredient = async (ingredientId) => {
-    const response = await customFetch(`/api/ingredients/deactivate/${ingredientId}`, {
-        method: 'PUT',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete ingredient');
+    try {
+        const response = await customFetch(`/api/ingredients/deactivate/${ingredientId}`, {
+            method: 'PUT',
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error deactivating ingredient:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const getIngredientIdByName = async (name) => {
     try {
-        const response = await customFetch(`/api/ingredients/byName/${name}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Error fetching ingredient ID by name');
-        }
-
-        return data.ingredientId;
+        const encodedName = encodeURIComponent(name);
+        const response = await customFetch(`/api/ingredients/byName/${encodedName}`);
+        return (await processResponse(response)).ingredientId;
     } catch (error) {
         console.error("Error fetching ingredient ID by name:", error);
         throw error;
@@ -111,287 +140,202 @@ export const getIngredientIdByName = async (name) => {
 
 export const getUnitIdByName = async (unitName) => {
     try {
-        const response = await customFetch(`/api/ingredients/units/byName/${unitName}`);
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message);
-        }
-
-        const responseData = await response.json();
-        const { unitId } = responseData;
-        return unitId;
+        const encodedUnitName = encodeURIComponent(unitName);
+        const response = await customFetch(`/api/ingredients/units/byName/${encodedUnitName}`);
+        return (await processResponse(response)).unitId;
     } catch (error) {
         console.error("Error fetching unit ID by name:", error);
         throw error;
     }
 };
 
+
 //Meal routes
 
-export const getAllMeals = () => {
-    return customFetch('/api/meals/all')
-        .then(response => response.json())
-        .catch(error => {
-            console.error("Error fetching all meals:", error);
-            throw error;
-        });
+export const getAllMeals = async () => {
+    try {
+        const response = await customFetch('/api/meals/all');
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error fetching all meals:", error);
+        throw error;
+    }
 };
 
 export const getMealById = async (mealId) => {
-    const response = await customFetch(`/api/meals/${mealId}`);
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error fetching meal by ID');
+    try {
+        const response = await customFetch(`/api/meals/${mealId}`);
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error fetching meal by ID:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const createMeal = async (mealData) => {
-    // Convert your frontend structure to match the backend expectation
-    const response = await customFetch('/api/meals/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(mealData)
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error creating meal');
+    try {
+        const response = await customFetch('/api/meals/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(mealData)
+        });
+        const { mealId } = await processResponse(response);
+        console.log("Created meal with ID:", mealId);
+        return mealId;
+    } catch (error) {
+        console.error("Error creating meal:", error);
+        throw error;
     }
-
-    const responseData = await response.json();
-    const { mealId } = responseData;
-    console.log("Created meal with ID:", mealId);
-
-    return mealId;
 };
 
 export const deactivateMeal = async (mealId) => {
-    const response = await customFetch(`/api/meals/deactivate/${mealId}`, {
-        method: 'DELETE',
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to delete meal');
+    try {
+        const response = await customFetch(`/api/meals/deactivate/${mealId}`, {
+            method: 'DELETE',
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error deactivating meal:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
-
-export const updateMealName = async (mealId, name) => {
-    const response = await customFetch(`/api/meals/update/${mealId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name })
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error updating meal name');
+const updateMeal = async (mealId, key, value) => {
+    try {
+        const response = await customFetch(`/api/meals/update/${mealId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ [key]: value })
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error(`Error updating meal's ${key}:`, error);
+        throw error;
     }
-
-    return response.json();
 };
 
-export const updateMealInfo = async (mealId, info) => {
-    const response = await customFetch(`/api/meals/update/${mealId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ info })
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error updating meal info');
-    }
-
-    return response.json();
-};
-
-export const updateMealType = async (mealId, mealType) => {
-    const response = await customFetch(`/api/meals/update/${mealId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ mealType })
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error updating meal type');
-    }
-
-    return response.json();
-};
-
-export const updateMealServings = async (mealId, servings) => {
-    const response = await customFetch(`/api/meals/update/${mealId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ servings })
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error updating meal servings');
-    }
-
-    return response.json();
-};
+export const updateMealName = (mealId, name) => updateMeal(mealId, 'name', name);
+export const updateMealInfo = (mealId, info) => updateMeal(mealId, 'info', info);
+export const updateMealType = (mealId, mealType) => updateMeal(mealId, 'mealType', mealType);
+export const updateMealServings = (mealId, servings) => updateMeal(mealId, 'servings', servings);
 
 //intake routes
-
-export const saveUserMealIntake = (intakeData) => {
-    return customFetch('/api/intake/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(intakeData),
-        credentials: 'include'  // Ensure cookies are sent with the request
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw new Error(err.message); });
-        }
-        return response.json();
-    })
-    .catch(error => {
+export const saveUserMealIntake = async (intakeData) => {
+    try {
+        const response = await customFetch('/api/intake/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(intakeData),
+            credentials: 'include'
+        });
+        return await processResponse(response);
+    } catch (error) {
         console.error("Error:", error);
         throw error;
-    });
+    }
 };
 
 export const deleteUserMealIntake = async (id) => {
-    const response = await customFetch(`/api/intake/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include'  // Ensure cookies are sent with the request
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error deleting user meal intake');
+    try {
+        const response = await customFetch(`/api/intake/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error deleting user meal intake:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const fetchRecentUserMealIntake = async () => {
     try {
-        const response = await customFetch("/api/intake/recent", {  
-
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch recent meals intake");
-        }
-        return await response.json(); // Return the fetched data
+        const response = await customFetch("/api/intake/recent");
+        return await processResponse(response);
     } catch (error) {
         console.error("Error fetching recent meals intake:", error);
-        throw error; // Rethrow the error for further handling by the caller.
+        throw error;
     }
 };
 
-export const getUserNutritionalIntake = async (date) => {  
-    const response = await customFetch(`/api/intake/${date}`, {  
-
-    });
-    console.log("response from server: ", response);
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error fetching user nutritional intake');
+export const getUserNutritionalIntake = async (date) => {
+    try {
+        const response = await customFetch(`/api/intake/${date}`);
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error fetching user nutritional intake:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
-//user routes
+// User Routes
 
-export const registerUser = (userData) => {
-    return customFetch('/api/users/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData),
-        credentials: 'include'  
-    })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.message); });
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            throw error;  // Re-throw the error so that it can be caught and handled in the calling function/component
+export const registerUser = async (userData) => {
+    try {
+        const response = await customFetch('/api/users/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData),
+            credentials: 'include'
         });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error registering user:", error);
+        throw error;
+    }
 };
 
 export const loginUser = async (credentials) => {
-    console.log(credentials);
-    const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials),
-        credentials: 'include'  
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error logging in');
+    try {
+        const response = await customFetch('/api/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(credentials),
+            credentials: 'include'
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error logging in:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const logoutUser = async (refreshToken) => {
-    const response = await customFetch('/api/users/logout', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refreshToken }),
-        credentials: 'include'  
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error logging out');
+    try {
+        const response = await customFetch('/api/users/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refreshToken }),
+            credentials: 'include'
+        });
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error logging out:", error);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const checkAuthStatus = async () => {
-   try {
-       const response = await customFetch('/api/users/checkAuthStatus');
-       if (!response.ok) {
-           const errorData = await response.json();
-           throw new Error(errorData.message || 'Server error during auth check.');
-       }
-       return await response.json();
-   } catch (error) {
-       console.error("Error checking auth status:", error);
-       throw error;
-   }
+    try {
+        const response = await customFetch('/api/users/checkAuthStatus');
+        return await processResponse(response);
+    } catch (error) {
+        console.error("Error checking auth status:", error);
+        throw error;
+    }
 };

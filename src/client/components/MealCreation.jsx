@@ -3,8 +3,7 @@ import { toast } from 'react-toastify';
 import { getIngredients, createMeal, getUnits, deactivateIngredient, getIngredientIdByName, getUnitIdByName } from '../api';
 import IngredientCreation from './IngredientCreation';
 import { useTable, useSortBy } from 'react-table';
-import '../../../css/app.css';
-import '../../../css/NutritionalBar.css';
+//import '../../../css/NutritionalBar.css';
 import { useMeals } from '../context/MealContext';
 import Modal from 'react-modal';
 
@@ -365,48 +364,60 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
             {
                 Header: 'Name',
                 accessor: 'name',
+                headerClassName: 'dark-table thead',
             },
             {
-                Header: 'Calories (kcal)',
+                Header: 'Calories (kcal) / 100g',
                 accessor: 'calories',
+                headerClassName: 'dark-table thead',
             },
             {
-                Header: 'Protein',
+                Header: 'Protein / 100g',
                 accessor: 'protein',
+                headerClassName: 'dark-table thead',
             },
             {
-                Header: 'Carbs',
+                Header: 'Carbs / 100g',
                 accessor: 'carbs',
+                headerClassName: 'dark-table thead',
             },
             {
-                Header: 'Fats',
+                Header: 'Fats / 100g',
                 accessor: 'fats',
+                headerClassName: 'dark-table thead',
             },
             {
                 accessor: 'id',
+                headerClassName: 'dark-table thead',
                 Cell: ({ value }) => {
                     const isIngredientAdded = mealIngredients.some(ing => ing.ingredientId === value);
 
                     return (
                         <div>
                             {!isIngredientAdded ? (
-                                <button onClick={() => openModal(ingredients.find(ing => ing.id === value))}>
-                                    Add to Meal
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => openModal(ingredients.find(ing => ing.id === value))}
+                                >
+                                    Add 
                                 </button>
                             ) : (
-                                <button disabled>Added</button>
+                                <button className="btn btn-secondary" disabled>Added</button>
                             )}
-                            <button onClick={() => handleDeleteIngredient(value)}>
+                            <button 
+                                className="btn btn-danger" 
+                                onClick={() => handleDeleteIngredient(value)}
+                            >
                                 Delete
                             </button>
                         </div>
                     );
                 }
             }
-
         ],
         [ingredients, mealIngredients]
     );
+
 
     const {
         getTableProps,
@@ -417,70 +428,64 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     } = useTable({ columns, data }, useSortBy);
 
     return (
-        <div>
+        <div className="dark-bg">
+            {/* 1. Inputs and Textareas */}
             <input
                 type="text"
+                className="form-control dark-input mb-2"
                 placeholder="Meal Name"
                 value={mealName}
                 onChange={(e) => setMealName(e.target.value)}
             />
 
             <textarea 
+                className="form-control dark-input mb-2"
                 placeholder="Description or Additional Information"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
             ></textarea>
 
+            {/* 2. Ingredients List */}
+            {mealIngredients.map((ing, index) => (
+                <div key={`${ing.ingredient_name || ing.name}-${index}`} className="ingredient-item d-flex justify-content-between align-items-center mb-2">
+                    <span>{ing.amount} {ing.unit || units.find(u => u.id === ing.unitId)?.name} {ing.ingredient_name || ing.name}</span>
+                    <button className="btn btn-sm btn-danger" onClick={() => removeIngredientFromMeal(index)}>Remove</button>
+                </div>
+            ))}
 
-            {/* List of added ingredients */}
-            {mealIngredients.map((ing, index) => {
-                return (
-                    <div key={`${ing.ingredient_name || ing.name}-${index}`}>
-                        {ing.amount} {ing.unit || units.find(u => u.id === ing.unitId)?.name} {ing.ingredient_name || ing.name}
-                        <button onClick={() => removeIngredientFromMeal(index)}>-</button>
-                    </div>
-                );
-            })}
-
-            {/* Totals */}
-            <div>
-                <strong>Total Calories:</strong> {totals.calories}
-                <strong>Total Protein:</strong> {totals.protein}g
-                <strong>Total Carbs:</strong> {totals.carbs}g
-                <strong>Total Fats:</strong> {totals.fats}g
+            {/* 3. Totals and Buttons */}
+            <div className="mb-2">
+                <strong>Total Calories:</strong> {Math.round(totals.calories)}
+                <strong>Total Protein:</strong> {Math.round(totals.protein)}g
+                <strong>Total Carbs:</strong> {Math.round(totals.carbs)}g
+                <strong>Total Fats:</strong> {Math.round(totals.fats)}g
             </div>
 
-            {hasChanged? (                
-                <button onClick={openSaveModal} disabled={!isValid}> Save and Log Meal</button>
+            {hasChanged ? (                
+                <button onClick={openSaveModal} className="btn btn-primary mb-2" disabled={!isValid}> Save and Log Meal</button>
             ) : (
-                <button onClick={setDatePickerOpen} disabled={!isValid}>Log Meal</button>
-            )}           
+                <button onClick={setDatePickerOpen} className="btn btn-primary mb-2" disabled={!isValid}>Log Meal</button>
+            )}
 
-            {/* Log button 
-            <button onClick={setDatePickerOpen} disabled={!isValid}>Log Meal</button>
-
-            {/* Save button
-            <button onClick={openSaveModal} disabled={!isValid}> Save and Log Meal</button>*/}
-
-            {/* Search Field */}
+            {/* 4. Search Field */}
             <input
+                className="form-control mb-2"
                 value={filterInput}
                 onChange={e => setFilterInput(e.target.value)}
                 placeholder="Search for an ingredient..."
-            />            
+            />
 
-            <button onClick={() => setIngredientModalOpen(true)}>Create New Ingredient</button>
+            <button className="btn btn-secondary mb-2" onClick={() => setIngredientModalOpen(true)}>Create New Ingredient</button>
 
-
-            {/* Ingredients List with Add button */}
-            <table {...getTableProps()}>
+            {/* 5. Table */}
+            <div className="table-responsive">
+            <table {...getTableProps()} className="dark-table table-responsive">
                 <thead>
                     {headerGroups.map(headerGroup => (
                         <tr {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map(column => (
                                 <th {...column.getHeaderProps(column.getSortByToggleProps())}>
                                     {column.render('Header')}
-
                                 </th>
                             ))}
                         </tr>
@@ -491,83 +496,113 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                         prepareRow(row);
                         return (
                             <tr {...row.getRowProps()}>
-                                {row.cells.map(cell => {
-                                    return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                                })}
+                                {row.cells.map(cell => (
+                                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                                ))}
                             </tr>
                         )
                     })}
                 </tbody>
             </table>
+            </div>  
+            
+            {/* 6. Modals */}
 
             {/* Ingredient Addition Modal */}
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h3>Add {currentIngredient?.name} to Meal </h3>
-                        <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" />
-                        <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-                            {units.map(u => (
-                                <option key={u.id} value={u.id}>
-                                    {u.name}
-                                </option>
-                            ))}
-                        </select>
-                        <button onClick={addIngredientToMeal} disabled={!isAmountValid}>Add to Meal</button>
-                        <button onClick={closeModal}>Cancel</button>
+                <div className="modal-overlay modal show d-block dark-modal">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Add {currentIngredient?.name} to Meal</h5>
+                                <button type="button" className="close" onClick={closeModal}>&times;</button>
+                            </div>
+                            <div className="modal-body">
+                                <input type="number" className="form-control mb-2" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" />
+                                <select className="form-control mb-2" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                                    {units.map(u => (
+                                        <option key={u.id} value={u.id}>
+                                            {u.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="modal-footer">
+                                <button onClick={addIngredientToMeal} className="btn btn-primary" disabled={!isAmountValid}>Add to Meal</button>
+                                <button onClick={closeModal} className="btn btn-secondary">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Save Meal Modal */}
             {isSaveModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h3>Save Meal</h3>
-                        
-                        {/* Servings Input */}
-                        <label htmlFor="servings">Number of Servings:</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={servings}
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value);
-                                if (val > 0 && Number.isInteger(val)) {
-                                    setServings(val);
-                                }
-                            }}
-                        />
+                <div className="modal-overlay modal show d-block dark-modal">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Save Meal</h5>
+                                <button type="button" className="close" onClick={() => setIsSaveModalOpen(false)}>&times;</button>
+                            </div>
+                            <div className="modal-body">
+                                <label htmlFor="servings" className="mb-2">Number of Servings:</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="form-control mb-2"
+                                    value={servings}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (val > 0 && Number.isInteger(val)) {
+                                            setServings(val);
+                                        }
+                                    }}
+                                />
 
-                        <label htmlFor="modalMealType">Meal Type:</label>
-                        <select 
-                            id="modalMealType"
-                            value={mealType} 
-                            onChange={(e) => setMealType(e.target.value)}
-                        >
-                            <option value="" disabled>Select meal type...</option>
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="dinner">Dinner</option>
-                            <option value="snack">Snack</option>
-                        </select>
-
-                        <button onClick={confirmSaveMeal} disabled={!isSaveValid} >Save Meal</button>
-                        <button onClick={() => setIsSaveModalOpen(false)}>Cancel</button>
+                                <label htmlFor="modalMealType" className="mb-2">Meal Type:</label>
+                                <select 
+                                    id="modalMealType"
+                                    className="form-control mb-2"
+                                    value={mealType} 
+                                    onChange={(e) => setMealType(e.target.value)}
+                                >
+                                    <option value="" disabled>Select meal type...</option>
+                                    <option value="breakfast">Breakfast</option>
+                                    <option value="lunch">Lunch</option>
+                                    <option value="dinner">Dinner</option>
+                                    <option value="snack">Snack</option>
+                                </select>
+                            </div>
+                            <div className="modal-footer">
+                                <button onClick={confirmSaveMeal} className="btn btn-primary" disabled={!isSaveValid} >Save Meal</button>
+                                <button onClick={() => setIsSaveModalOpen(false)} className="btn btn-secondary">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
 
+            {/* Ingredient Creation Modal */}
             {isIngredientModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <button onClick={() => setIngredientModalOpen(false)}>Close</button>
-                        <IngredientCreation />
+                <div className="modal-overlay modal show d-block dark-modal">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Ingredient Creation</h5>
+                                <button type="button" className="btn-close" onClick={() => setIngredientModalOpen(false)}>&times;</button>
+                            </div>
+                            <div className="modal-body">
+                                <IngredientCreation />
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
+                
         </div>
     );
+
 }
 
 export default MealCreation;

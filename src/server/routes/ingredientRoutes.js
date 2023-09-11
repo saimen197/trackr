@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db/database.js');
+const { validateIngredient } = require('../middleware/validationMiddleware');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.get('/', (req, res, next) => {
     }
 });
 
-router.post('/add', (req, res, next) => {
+router.post('/add', validateIngredient, (req, res, next) => {
     const { name, calories, protein, carbs, fats } = req.body;
 
     try {
@@ -75,7 +76,6 @@ router.put('/deactivate/:id', (req, res, next) => {
         })();
 
         if (result.changes === 0) {
-            // No rows were updated, which likely means the ingredient was already inactive or not found.
             return res.status(404).json({ message: 'Ingredient not found or already deactivated' });
         }
 

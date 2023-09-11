@@ -76,41 +76,56 @@ function IngredientCreation() {
 
     return (
         <div>
-            <input 
-                type="text" 
-                placeholder="Ingredient Name" 
-                value={ingredientName}
-                onChange={(e) => setIngredientName(e.target.value)}
-            />
-            <input 
-                type="number"
-                min="0"
-                placeholder="Calories/100g"
-                value={calories}
-                onChange={(e) => setCalories(e.target.value)}
-            />
-            <input 
-                type="number"
-                min="0"
-                placeholder="Protein/100g"
-                value={protein}
-                onChange={(e) => setProtein(e.target.value)}
-            />
-            <input 
-                type="number"
-                min="0"
-                placeholder="Carbs/100g"
-                value={carbs}
-                onChange={(e) => setCarbs(e.target.value)}
-            />
-            <input 
-                type="number"
-                min="0"
-                placeholder="Fats/100g"
-                value={fats}
-                onChange={(e) => setFats(e.target.value)}
-            />
-            <button onClick={handleSubmit} disabled={!areFieldsValid()}>Save Ingredient</button>
+            <div className="form-group">
+                <input 
+                    type="text" 
+                    className="form-control mb-2"
+                    placeholder="Ingredient Name" 
+                    value={ingredientName}
+                    onChange={(e) => setIngredientName(e.target.value)}
+                />
+            </div>
+            <div className="form-group">
+                <input 
+                    type="number"
+                    min="0"
+                    className="form-control mb-2"
+                    placeholder="Calories/100g"
+                    value={calories}
+                    onChange={(e) => setCalories(e.target.value)}
+                />
+            </div>
+            <div className="form-group">
+                <input 
+                    type="number"
+                    min="0"
+                    className="form-control mb-2"
+                    placeholder="Protein/100g"
+                    value={protein}
+                    onChange={(e) => setProtein(e.target.value)}
+                />
+            </div>
+            <div className="form-group">
+                <input 
+                    type="number"
+                    min="0"
+                    className="form-control mb-2"
+                    placeholder="Carbs/100g"
+                    value={carbs}
+                    onChange={(e) => setCarbs(e.target.value)}
+                />
+            </div>
+            <div className="form-group">
+                <input 
+                    type="number"
+                    min="0"
+                    className="form-control mb-2"
+                    placeholder="Fats/100g"
+                    value={fats}
+                    onChange={(e) => setFats(e.target.value)}
+                />
+            </div>
+            <button onClick={handleSubmit} className="btn btn-primary" disabled={!areFieldsValid()}>Save Ingredient</button>
         </div>
     );
 }

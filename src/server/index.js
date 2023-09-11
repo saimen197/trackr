@@ -32,7 +32,7 @@ app.use(errorMiddleware);
 app.use((req, res) => {
     res.status(404).send("Not Found");
 });
-
+/*
 const clientApp = express();
 clientApp.use(express.static('dist'));
 clientApp.use(express.json());
@@ -40,7 +40,7 @@ clientApp.use(express.json());
 clientApp.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../../dist', 'index.html'));
 });
-
+*/
 app.listen(process.env.PORT || 3000, () => console.log(`Listening on port ${process.env.PORT || 3000}!`));
 
 if (process.env.NODE_ENV !== 'development') {

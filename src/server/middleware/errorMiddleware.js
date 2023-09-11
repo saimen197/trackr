@@ -1,7 +1,7 @@
 module.exports = function(err, req, res, next) {
     console.error(err.stack); // Logs the stack trace of the error for debugging
 
-    // If the error has a status, it's a custom error we've thrown elsewhere in our app
+    // If the error has a status, it's a custom error thrown elsewhere in the app
     if (err.status && err.message) {
         res.status(err.status).json({
             status: 'error',

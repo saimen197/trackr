@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getUserNutritionalIntake } from '../../api';
 import NutritionalBar from './NutritionalBar';
+import '../../../../css/NutritionalBar.css';
 
-const DailyIntake = ({ date, recentIntake }) => {  // Removed the token prop
+const DailyIntake = ({ date, recentIntake }) => {
     const [data, setData] = useState({});
     
     const DAILY_GOALS = {
@@ -15,7 +16,7 @@ const DailyIntake = ({ date, recentIntake }) => {  // Removed the token prop
     useEffect(() => {
         const fetchData = async () => {
             try {                
-                const intakeData = await getUserNutritionalIntake(date);  // Only passing the date
+                const intakeData = await getUserNutritionalIntake(date);
                 setData(intakeData);
                 console.log("intakeData: ", intakeData);
             } catch (error) {
@@ -27,11 +28,12 @@ const DailyIntake = ({ date, recentIntake }) => {  // Removed the token prop
     }, [date, recentIntake]);
 
     return (
-        <div>
-            <NutritionalBar label="Calories" value={data.total_calories || 0} max={DAILY_GOALS.total_calories} />
-            <NutritionalBar label="Protein" value={data.total_protein || 0} max={DAILY_GOALS.total_protein} />
-            <NutritionalBar label="Carbs" value={data.total_carbs || 0} max={DAILY_GOALS.total_carbs} />
-            <NutritionalBar label="Fats" value={data.total_fats || 0} max={DAILY_GOALS.total_fats} />
+        <div className="my-4 dark-theme">
+            <h5 className="mb-3 dark-theme-title">Daily Nutritional Goals</h5>
+            <NutritionalBar label="Calories" value={data.total_calories || 0} max={DAILY_GOALS.total_calories} className="mb-2"/>
+            <NutritionalBar label="Protein" value={data.total_protein || 0} max={DAILY_GOALS.total_protein} className="mb-2"/>
+            <NutritionalBar label="Carbs" value={data.total_carbs || 0} max={DAILY_GOALS.total_carbs} className="mb-2"/>
+            <NutritionalBar label="Fats" value={data.total_fats || 0} max={DAILY_GOALS.total_fats} className="mb-2"/>
         </div>
     );
 };

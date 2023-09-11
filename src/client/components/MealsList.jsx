@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useMeals } from '../context/MealContext';
-import '../../../css/app.css';
 
 
 function MealsList() {
@@ -36,7 +35,7 @@ function MealsList() {
     const [editedMealInfo, setEditedMealInfo] = useState(''); 
     const [editedMealType, setEditedMealType] = useState(''); 
     const [editedMealServings, setEditedMealServings] = useState(''); 
-    const [searchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('all'); 
 
     useEffect(() => {        
@@ -174,165 +173,191 @@ function MealsList() {
 
     return (
         <>
-            <div>
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 {/* Render meals */}
-                <button onClick={openMealCreationModal}>Create Meal</button>
-                {/*{isMealCreationOpen && <MealCreation />}/*}
+                <button className="btn btn-secondary" onClick={openMealCreationModal}>Create New Meal</button>
             </div>
 
-            <div>
+            <div className="d-flex align-items-center mb-3">
                 {/* Search Input */}
                 <input 
-                    type="text" 
-                    value={searchTerm} 
+                    type="text"
+                    className="form-control me-3"
+                    value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search for a meal..."
                 />
 
                 {/* Filter buttons */}
-                <button className={activeFilter === 'all' ? 'active-filter' : ''} onClick={() => setActiveFilter('all')}>All</button>
-                <button className={activeFilter === 'breakfast' ? 'active-filter' : ''} onClick={() => setActiveFilter('breakfast')}>Breakfast</button>
-                <button className={activeFilter === 'lunch' ? 'active-filter' : ''} onClick={() => setActiveFilter('lunch')}>Lunch</button>
-                <button className={activeFilter === 'dinner' ? 'active-filter' : ''} onClick={() => setActiveFilter('dinner')}>Dinner</button>
-                <button className={activeFilter === 'snack' ? 'active-filter' : ''} onClick={() => setActiveFilter('snack')}>Snack</button>
-            </div>         
-  
-        <ul>
-            {filteredMeals.map(meal => (
-                <div key={meal.id} className="meal-list-item">
-                    {isEditing && isEditing.mealId === meal.id && isEditing.field === 'name' ? (
-                        <>
-                            <input 
-                                type="text" 
-                                value={editedMealName} 
-                                onChange={(e) => setEditedMealName(e.target.value)}
-                            />
-                            <button onClick={saveChanges}>Save</button>
-                            <button onClick={abortEditing}>Cancel</button>
-                        </>
-                    ) : (
-                        <>
-                            <span 
-                                onClick={() => handleMealClick(meal.id)}
-                                onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
-                                className={selectedMealId === meal.id ? 'selected' : ''}
-                            >
-                                {meal.name}
-                            </span>
+                <div className="btn-group">
+                    {['all', 'breakfast', 'lunch', 'dinner', 'snack'].map(filter => (
+                        <button
+                            key={filter}
+                            className={`btn ${activeFilter === filter ? 'btn-info' : 'btn-outline-info'}`}
+                            onClick={() => setActiveFilter(filter)}
+                        >
+                            {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-                            {isEditing && isEditing.mealId === meal.id && isEditing.field === 'servings' ? (
-                                <>
-                                    <input 
-                                        type="number"
-                                        className="input-number"
-                                        min="1"
-                                        value={editedMealServings}
-                                        onChange={(e) => {
-                                            const val = parseInt(e.target.value);
-                                            if (val > 0 && Number.isInteger(val)) {
-                                                setEditedMealServings(val);
-                                            }
-                                        }}                                            
-                                    />
-                                        servings
-                                    <button onClick={saveChanges}>Save</button>
-                                    <button onClick={abortEditing}>Cancel</button>
-                                </>
-                            ) : (
-                                <>
+            <ul className="list-group">
+                {filteredMeals.map(meal => (
+                    <div 
+                        key={meal.id} 
+                        className="list-group-item"
+                        onClick={() => handleMealClick(meal.id)}
+                    >
+                        {isEditing && isEditing.mealId === meal.id && isEditing.field === 'name' ? (
+                            <div className="d-flex align-items-center">
+                                <input 
+                                    type="text"
+                                    className="form-control me-2"
+                                    value={editedMealName}
+                                    onChange={(e) => setEditedMealName(e.target.value)}
+                                />
+                                <button className="btn btn-success me-2" onClick={saveChanges}>Save</button>
+                                <button className="btn btn-secondary" onClick={abortEditing}>Cancel</button>
+                            </div>
+                        ) : (
+                            <div className="d-flex align-items-center">
+                                <span                                     
+                                    onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
+                                    className={`me-2 ${selectedMealId === meal.id ? 'font-weight-bold' : ''}`}
+                                >
+                                    {meal.name}
+                                </span>
+                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'servings' ? (
+                                    <div className="d-flex align-items-center">
+                                        <input 
+                                            type="number"
+                                            className="form-control me-2"
+                                            min="1"
+                                            value={editedMealServings}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (val > 0 && Number.isInteger(val)) {
+                                                    setEditedMealServings(val);
+                                                }
+                                            }}                                            
+                                        />
+                                        <span className="me-2">servings</span>
+                                        <button className="btn btn-success me-2" onClick={saveChanges}>Save</button>
+                                        <button className="btn btn-secondary" onClick={abortEditing}>Cancel</button>
+                                    </div>
+                                ) : (
                                     <span 
                                         onClick={() => handleMealClick(meal.id)}
                                         onDoubleClick={() => startEditing(meal.id, 'servings', meal.servings)}
-                                        className={selectedMealId === meal.id ? 'selected' : ''}
+                                        className={selectedMealId === meal.id ? 'font-weight-bold' : ''}
                                     >
                                         , {meal.servings} servings
-                                    </span> 
-                                    
-                                    {/* Only render these buttons if neither 'name' nor 'servings' are being edited */}
-                                    {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
-                                        <>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleAddButtonClick(meal.id, meal.name, meal.info, meal.ingredients);
-                                                }}
-                                            >
-                                                Add to daily intake
-                                            </button>
+                                    </span>
+                                )}
+                            </div>
+                        )}
 
-                                            <button onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteMealPrompt(meal.id);
-                                            }}>Delete</button>
-                                        </>
-                                    ) : null}
-                                </>
-                            )}
-                        </>
-                    )}
+                        {expandedMealId === meal.id && (
+                            <div className="mt-2">
+                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'info' ? (
+                                    <div className="mb-2">
+                                        <textarea 
+                                            className="form-control"
+                                            value={editedMealInfo}
+                                            onChange={(e) => setEditedMealInfo(e.target.value)}
+                                            placeholder="Info about the meal"
+                                        ></textarea>
+                                        <button className="btn btn-success mt-2" onClick={saveChanges}>Save</button>
+                                        <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <p onDoubleClick={() => startEditing(meal.id, 'info', meal.info)}>Description: {meal.info}</p>
+                                )}
 
-                    {expandedMealId === meal.id && (
-                        <div className="meal-details">
-                            {isEditing && isEditing.mealId === meal.id && isEditing.field === 'info' ? (
+                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'type' ? (
+                                    <div className="mb-2">
+                                        <select 
+                                            className="form-control"
+                                            value={editedMealType}
+                                            onChange={(e) => setEditedMealType(e.target.value)}
+                                        >
+                                            <option value="" disabled>Select meal type...</option>
+                                            <option value="breakfast">Breakfast</option>
+                                            <option value="lunch">Lunch</option>
+                                            <option value="dinner">Dinner</option>
+                                            <option value="snack">Snack</option>
+                                        </select>
+                                        <button className="btn btn-success mt-2" onClick={saveChanges}>Save</button>
+                                        <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <p onDoubleClick={() => startEditing(meal.id, 'type', meal.meal_type)}>Type: {meal.meal_type}</p>
+                                )}
+
+                                <ul className="list-unstyled">
+                                    <strong>Ingredients:</strong>
+                                    {meal.ingredients.map(ingredient => (
+                                        <li key={ingredient.ingredient_name}>
+                                            {ingredient.ingredient_name} - {ingredient.amount} {ingredient.unit}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        <div className="mt-2 d-flex justify-content-end">
+                            {/* Only render these buttons if neither 'name' nor 'servings' are being edited */}
+                            {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
                                 <>
-                                    <textarea 
-                                        value={editedMealInfo} 
-                                        onChange={(e) => setEditedMealInfo(e.target.value)}
-                                        placeholder="Info about the meal"
-                                    />
-                                    <button onClick={saveChanges}>Save</button>
-                                    <button onClick={abortEditing}>Cancel</button>
-                                </>
-                            ) : (
-                                <p onDoubleClick={() => startEditing(meal.id, 'info', meal.info)}> Description: {meal.info} </p>
-                            )}
-
-                            {isEditing && isEditing.mealId === meal.id && isEditing.field === 'type' ? (
-                                <>
-                                    <select 
-                                        value={editedMealType} 
-                                        onChange={(e) => setEditedMealType(e.target.value)}
+                                    <button 
+                                        className="btn btn-primary me-2"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddButtonClick(meal.id, meal.name, meal.info, meal.ingredients);
+                                        }}
                                     >
-                                        <option value="" disabled>Select meal type...</option>
-                                        <option value="breakfast">Breakfast</option>
-                                        <option value="lunch">Lunch</option>
-                                        <option value="dinner">Dinner</option>
-                                        <option value="snack">Snack</option>
-                                    </select>
-                                    <button onClick={saveChanges}>Save</button>
-                                    <button onClick={abortEditing}>Cancel</button>
-                                </>
-                            ) : (
-                                <p onDoubleClick={() => startEditing(meal.id, 'type', meal.meal_type)}>Type: {meal.meal_type}</p>
-                            )}
+                                        Add to daily intake
+                                    </button>
 
-                            <ul>
-                                Ingredients:
-                                {meal.ingredients.map(ingredient => (
-                                    <li key={ingredient.ingredient_name}>
-                                        {ingredient.ingredient_name} - {ingredient.amount} {ingredient.unit}
-                                    </li>
-                                ))}
-                            </ul>
+                                    <button 
+                                        className="btn btn-danger"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteMealPrompt(meal.id);
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </>
+                            ) : null}
                         </div>
-                    )}
-                </div>
-            ))}
-        </ul>
+                    </div>
+                ))}
+            </ul>
+
+
             {isMealCreationOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <button onClick={() => closeMealCreationModal()}>Close</button>
-                            <MealCreation 
-                                initialMealName={addedMealName}
-                                initialDescription={addedMealInfo}
-                                initialMealIngredients={addedMealIngredients}
-                            />
+                <div className="modal show d-block" tabIndex="-1">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Create Meal</h5>
+                                <button type="button" className="btn-close" onClick={closeMealCreationModal}></button>
+                            </div>
+                            <div className="modal-body">
+                                <MealCreation 
+                                    initialMealName={addedMealName}
+                                    initialDescription={addedMealInfo}
+                                    initialMealIngredients={addedMealIngredients}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-      </>       
+        </>
     );
+
 }
 
 export default MealsList;

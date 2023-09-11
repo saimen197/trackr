@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useMeals } from '../context/MealContext';
-import '../../../css/app.css';
 import DailyIntake from './helper/DailyIntake';
 import RecentMealIntake from './helper/RecentMealIntake';
 import AddIntakeModal from './helper/AddIntakeModal';
 import MealsList from './MealsList';
+import { Modal, Button } from 'react-bootstrap';
+
 
 
 function MainComponent() {
@@ -65,7 +66,7 @@ function MainComponent() {
 
 
     const handleDateConfirm = async (selectedDate, intakeType, served) => {
-        setDatePickerOpen(false);
+        
 
         const date = selectedDate.toISOString().split('T')[0];
         const time = selectedDate.toTimeString().split(' ')[0];
@@ -83,6 +84,8 @@ function MainComponent() {
             console.log(userMealIntakeData);
             await saveUserMealIntake(userMealIntakeData);
             updateRecentIntake();
+            setDatePickerOpen(false);
+            closeMealCreationModal();
             toast.success("Meal added to daily intake successfully!");  // <-- This line adds the success toast
 
         } catch (error) {
@@ -93,12 +96,10 @@ function MainComponent() {
 
     async function handleDeleteUserMealIntake(entryId) {
         try {
-            // Assuming you have a delete function in api.jsx named deleteUserMealIntake
+
             await deleteUserMealIntake(entryId);
-            
-            // Update the recentIntake state
-            const updatedIntake = recentIntake.filter(entry => entry.id !== entryId);
-            setRecentIntake(updatedIntake);
+
+            updateRecentIntake();
 
             toast.success("Meal intake entry deleted successfully!");
 
@@ -108,42 +109,61 @@ function MainComponent() {
         }
     }
 
-    return (
-        <div className="main-component">
-            <div>
-                <h2>Nutritional Intake</h2> 
-                <input 
-                    type="date" 
-                    value={showNutritionDate} 
-                    onChange={(e) => setShowNutritionDate(e.target.value)}
-                />
+return (
+    <div className="container mt-3">
 
-                <DailyIntake date={showNutritionDate} recentIntake={recentIntake} />
-
-            </div>
-
-            <div>
-                <h2>Recent Meals logged</h2>     
-            
-                <RecentMealIntake recentIntake={recentIntake} handleDeleteUserMealIntake={handleDeleteUserMealIntake} />
-            </div> 
-            <h2>Log Meals</h2>           
-
-            <MealsList/>
- 
-            {isDatePickerOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <AddIntakeModal 
-                            isOpen={isDatePickerOpen} 
-                            onConfirm={handleDateConfirm}
-                            onCancel={() => setDatePickerOpen(false)}
+        <div className="row">
+            {/* Nutritional Intake Card */}
+            <div className="col-md-6 mb-4">
+                <div className="card shadow-sm rounded card-nutrition">
+                    <div className="card-header">
+                        <h2>Nutritional Intake</h2>
+                    </div>
+                    <div className="card-body">
+                        <input 
+                            className="form-control mb-3"
+                            type="date" 
+                            value={showNutritionDate} 
+                            onChange={(e) => setShowNutritionDate(e.target.value)}
+                            placeholder="Select Date"
                         />
+                        <DailyIntake date={showNutritionDate} recentIntake={recentIntake} />
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* Recent Meals Logged Card */}
+            <div className="col-md-6 mb-4">
+                <div className="card shadow-sm rounded">
+                    <div className="card-header">
+                        <h2>Recent Meals logged</h2>
+                    </div>
+                    <div className="card-body">     
+                        <RecentMealIntake recentIntake={recentIntake} handleDeleteUserMealIntake={handleDeleteUserMealIntake} />
+                    </div>
+                </div>
+            </div>
         </div>
-    );
+        
+        {/* Meals List Card */}
+        <div className="card shadow-sm rounded mb-4">
+            <div className="card-header">
+                <h2>Log Meals</h2>
+            </div>
+            <div className="card-body">
+                <MealsList />
+            </div>
+        </div>
+
+        <AddIntakeModal 
+            isOpen={isDatePickerOpen} 
+            onConfirm={handleDateConfirm}
+            onCancel={() => setDatePickerOpen(false)}
+        />
+
+    </div>
+);
+
 
 }
 

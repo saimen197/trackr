@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { registerUser } from '../api';  // Import the function
-import { toast } from 'react-toastify';  // Import the toast function
+import { registerUser } from '../api';
+import { toast } from 'react-toastify';
 import { BeatLoader } from 'react-spinners';
 import { useNavigate } from 'react-router-dom';
- 
- function Register() {
+
+function Register() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [email, setEmail] = useState('');
@@ -18,46 +18,42 @@ import { useNavigate } from 'react-router-dom';
             const userData = { username, password, email };
             const response = await registerUser(userData);
             if (response) {
-                // Show a success message
                 toast.success('Registration successful! Redirecting to login...');
-
-                // Optionally redirect to login page after a short delay
                 setTimeout(() => {
-                    // Assuming you're using react-router, you can use the useHistory hook to programmatically navigate
-                    // Add this at the top of your component: const history = useHistory();
                     navigate('/login');
-                }, 1500);  // Delay of 1.5 seconds
+                }, 1500);
             }
         } catch (error) {
-            // Show an error message
             toast.error(`Error during registration: ${error.message}`);
         } finally {
-            setLoading(false);  // Stop loading
+            setLoading(false);
         }
     };
 
-
     return (
-        <div>
-            <h2>Register</h2>
+        <div className="dark-theme">
+            <h2 className="text-light">Register</h2>
             <input 
+                className="dark-input form-control" // Use Bootstrap's form-control class for consistency
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
             />
             <input 
+                className="dark-input form-control"
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
             />
             <input 
+                className="dark-input form-control"
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
-            <button onClick={handleRegister} disabled={loading}>
+            <button className="btn btn-primary" onClick={handleRegister} disabled={loading}>
                 Register
             </button>
             {loading && <BeatLoader />}

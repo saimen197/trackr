@@ -16,44 +16,43 @@ function Login() {
             const response = await loginUser({ username, password });
             console.log(response);
             if (response && response.user) {
-                setUserId(response.user.id); // Assuming the user object has an 'id' property
+                setUserId(response.user.id);
                 setUsernameLoggedIn(response.user.username);
                 setIsLoggedIn(true);
                 setNeedsRedirect(false);
                 toast.success("Logged in successfully!");
                 navigate('/main');
             } else {
-                // This is a safety net in case the response doesn't contain the user but this scenario shouldn't really occur unless there's an unexpected server behavior
                 throw new Error("Unexpected server response");
             }
         } catch (error) {
-            // Handle any error that occurred during the login
             toast.error(error.message || "Login failed. Please try again.");
         }
     };
 
     return (
-        <>
-            <div>
-                <h2>Login</h2>
-                <input 
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-                <input 
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <button onClick={handleLogin}>Login</button>
-                <p>
-                    <Link to="/register">Register </Link>
-                </p>
+        <div className="dark-theme">
+            <h2 className="text-light">Login</h2>
+            <input 
+                className="dark-input form-control"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            <input 
+                className="dark-input form-control"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <div className="d-flex justify-content-between align-items-center">
+                <button className="btn btn-primary" onClick={handleLogin}>Login</button>
+                <Link className="text-light" to="/register">No account yet?</Link>
             </div>
-        </>
+        </div>
     );
+
 }
 
 export default Login;

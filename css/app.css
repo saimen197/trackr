@@ -1,54 +1,264 @@
-h1 {
-  text-align: center;
-  font-family: "Source Sans Pro", sans-serif;
-  font-weight: normal;
+.modal-content {
+    max-height: 90vh;
+    max-width: 90vw; 
+    overflow-y: auto;
+    overflow-x: auto;
+    background-color: #1E1E1E;
+    color: #EAEAEA;
+    box-sizing: border-box;
+    width: 100%;
+    margin: auto; /* Centers the content */
+    position: relative; /* For relative positioning */
 }
 
-
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-li {
-    padding: 15px;
-    border: 1px solid #ccc;
-    margin: 5px 0;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-li:hover, .selected {
-    background-color: #eee;
-}
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+.modal-backdrop, .modal-open .modal {
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
 }
 
-.modal-content {
-    background: white;
-    padding: 20px;
+.modal-dialog {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+
+.modal-header {
+    border-bottom-color: #272727;
+}
+
+body {
+    background-color: #121212;
+    color: #EAEAEA;
+}
+
+.card {
+    background-color: #1E1E1E;
+    border-color: #272727; /* A shade darker than card bg for a subtle border */
+}
+
+.card-nutrition {
+    border: 2px solid #4CAF50; /* green */
+}
+
+.card-header {
+    background-color: #1E1E1E;
+    color: #01C0A8; /* muted purple */
+    border-bottom: 1px solid #272727; /* subtle border */
+}
+
+.form-control {
+    background-color: #2A2A2A;
+    color: #EAEAEA; /* light text color for contrast */
+    border-color: #444;
+}
+
+.form-control::placeholder {
+    color: #888888; /* slightly dimmed color for placeholder text */
+}
+
+.form-control:focus {
+    background-color: #333333;
+    border-color: #555555;
+    color: #FFFFFF;
+    outline: none; /* remove the default blue outline */
+    box-shadow: none; /* remove the default blue glow */
+}
+
+/* Styling for the Form.Select control */
+.form-select {
+    background-color: #2A2A2A;
+    color: #EAEAEA; /* light text color for contrast */
+    border-color: #444;
+}
+
+.form-select:focus {
+    background-color: #333333;
+    border-color: #555555;
+    color: #FFFFFF;
+    outline: none; /* remove the default blue outline */
+    box-shadow: none; /* remove the default blue glow */
+}
+
+/* If you want to also style the dropdown options, you can use: */
+.form-select option {
+    background-color: #2A2A2A;
+    color: #EAEAEA;
+}
+
+.form-select option:hover, .form-select option:focus {
+    background-color: #333333;
+    color: #FFFFFF;
+}
+
+
+.btn-action {
+    background-color: #01B8A5; /* muted cyan */
+    color: #121212; /* dark gray */
+}
+
+.btn-action:hover {
+    background-color: #019C8A; /* a slightly darker muted cyan for hover effect */
+    color: #121212;
+}
+
+.btn-primary {
+    background-color: #01B8A5; /* muted cyan */
+    border-color: #019C8A;
+    color: #121212;
+}
+
+.btn-primary:hover {
+    background-color: #019C8A;
+    border-color: #018077;
+}
+
+
+.btn-info {
+    background-color: #9FA8DA; /* muted version of the cyan */
+    color: #121212;
+}
+
+.btn-outline-info {
+    background-color: transparent;
+    border-color: #9FA8DA;
+    color: #9FA8DA;
+}
+
+.btn-outline-info:hover {
+    background-color: #9FA8DA;
+    color: #121212;
+}
+
+.btn-danger {
+    background-color: #CF6679; /* a dark red for delete */
+    border-color: #B05668;
+    color: #121212;
+}
+
+.btn-danger:hover {
+    background-color: #B05668;
+    border-color: #924B57;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    opacity: 0.5;
+    position: relative; /* Enable relative positioning */
+    top: -30px; /* Adjust the vertical position; you can change the value as needed */
+    right: 10px; /* Adjust the horizontal position; you can change the value as needed */
+}
+
+.btn-close:before {
+    content: '×'; /* The '×' character, can be replaced with SVG or another character */
+    color: #aaa; /* A light grey color to contrast the dark background */
+    font-size: 42px; /* Adjust to fit the desired size */
+}
+
+.btn-close:hover {
+    opacity: 0.7; /* A bit more visible on hover */
+}
+
+
+/* List Group */
+.list-group-item {
+    background-color: #1E1E1E;
+    border-color: #272727;
+    color: #EAEAEA; /* light text color for contrast */
+}
+
+.list-group-item .font-weight-bold {
+    color: #FFFFFF; /* even lighter for selected or emphasized items */
+}
+
+.dark-theme {
+    background-color: #222;
+    color: #EAEAEA; /* light gray for text */
+    padding: 10px;
     border-radius: 5px;
-    width: 90%;
-    max-width: 500px;
 }
 
-.active-filter {
-    background-color: #ddd;  /* Grey background for visual differentiation */
-    font-weight: bold;       /* Make the text bold */
-    border: 2px solid black; /* Add a border for more emphasis */
+.bg-dark {
+    background-color: #333; /* Adjust according to your theme */
 }
 
-.input-number {
-    width: 30px;
+.text-light {
+    color: #EAEAEA; /* Adjust to a suitable light color */
 }
+.dark-bg {
+    background-color: #222;
+    color: #ddd;
+}
+
+.dark-input {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #444;
+}
+
+.btn-secondary {
+    background-color: #444;
+    border: none;
+    color: #ddd;
+}
+
+.dark-table {
+    color: #ddd; 
+    border-collapse: collapse;
+}
+
+.dark-table td {
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+}
+
+
+.dark-table th, .dark-table td {
+    border: 1px solid #444;
+    padding: 8px 12px;
+}
+
+/* For Table Headers */
+.dark-table thead {
+    background-color: #2e2e2e; /* Dark grayish color */
+    color: #ffffff; /* White color for text */
+}
+
+/* For Table Rows */
+.dark-table tbody tr {
+    background-color: #3f3f3f; /* Slightly lighter than the header but still dark */
+    color: #e0e0e0; /* Light gray for readable text */
+}
+
+.dark-table tbody tr:hover {
+    background-color: #4f4f4f; /* Slightly lighter on hover to indicate interactivity */
+}
+
+/* For even rows */
+.dark-table tbody tr:nth-child(even) {
+    background-color: #3f3f3f; /* Slightly lighter than the header but still dark */
+    color: #e0e0e0; /* Light gray for readable text */
+}
+
+/* For odd rows */
+.dark-table tbody tr:nth-child(odd) {
+    background-color: #353535; /* A bit darker than even rows for contrast */
+    color: #e0e0e0; /* Light gray for readable text */
+}
+
+/* Modals */
+.dark-modal .modal-content {
+    background-color: #2e2e2e; /* Dark grayish color */
+}
+
+.dark-modal .modal-header,
+.dark-modal .modal-body {
+    color: #e0e0e0; /* Light gray for readable text */
+}
+.dark-theme-title {
+    color: #ccc;
+}
+

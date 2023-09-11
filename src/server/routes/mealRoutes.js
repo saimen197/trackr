@@ -1,9 +1,9 @@
 const express = require('express');
 const db = require('../db/database.js');
 const router = express.Router();
+const { validateMeal} = require('../middleware/validationMiddleware');
 
 
-// Retrieve all meals 
 router.get('/all', (req, res, next) => {
     try {
         const mealsStmt = db.prepare('SELECT * FROM meals WHERE is_active = 1;');
@@ -83,19 +83,22 @@ router.get('/:id', (req, res, next) => {
 
 
 // Add a new meal
-router.post('/add', (req, res, next) => {
+router.post('/add', validateMeal, (req, res, next) => {
     const { name, info, ingredients, meal_type, servings } = req.body;
     console.log(req.body);
 
+    const insertMeal = 'INSERT INTO meals (name, info, meal_type, servings) VALUES (?, ?, ?, ?)';
+    const insertMealIngredient = `
+        INSERT INTO meal_ingredients (meal_id, ingredient_id, amount, unit_id)
+        VALUES (?, ?, ?, ?)
+    `;
+
     try {
-        // Validate meal_type (optional but recommended)
-        const validMealTypes = ["breakfast", "lunch", "dinner", "snack"];
-        if (!validMealTypes.includes(meal_type)) {
-            return res.status(400).send({ error: "Invalid meal type provided!" });
-        }
+        // Begin a transaction
+        db.exec('BEGIN TRANSACTION');
 
         // Insert into meals table
-        const stmtMeal = db.prepare('INSERT INTO meals (name, info, meal_type, servings) VALUES (?, ?, ?, ?)');
+        const stmtMeal = db.prepare(insertMeal);
         const mealResult = stmtMeal.run(name, info, meal_type, servings);
 
         const mealId = mealResult.lastInsertRowid;
@@ -103,19 +106,20 @@ router.post('/add', (req, res, next) => {
         // Insert each ingredient into meal_ingredients table
         ingredients.forEach(ingredient => {
             const { ingredientId, amount, unitId } = ingredient;
-
-            const stmtMealIngredient = db.prepare(`
-                INSERT INTO meal_ingredients (meal_id, ingredient_id, amount, unit_id)
-                VALUES (?, ?, ?, ?)
-            `);
-
+            const stmtMealIngredient = db.prepare(insertMealIngredient);
             stmtMealIngredient.run(mealId, ingredientId, amount, unitId);
         });
+
+        // If everything went well, commit the transaction
+        db.exec('COMMIT');
 
         res.status(201).send({ message: 'Meal successfully created!', mealId: mealId });
 
     } catch (error) {
         console.error("Error:", error.message);
+
+        // If anything goes wrong, rollback the entire transaction
+        db.exec('ROLLBACK');
 
         if (error.code === 'SQLITE_CONSTRAINT') {
             res.status(409).send({ error: 'There was a unique constraint violation!' });

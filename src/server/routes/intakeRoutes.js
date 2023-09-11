@@ -2,10 +2,14 @@ const express = require('express');
 const db = require('../db/database.js');
 const router = express.Router();
 const authenticateJWT = require('../middleware/authMiddleware');
+const { validateMealIntake, validateDate, validateIntakeId } = require('../middleware/validationMiddleware');
 
-router.post('/add', authenticateJWT,  (req, res, next) => {
+
+router.post('/add', authenticateJWT, validateMealIntake,  (req, res, next) => {
     const userId = req.user.id; // Using this id as authenticateJWT will set this based on token payload
     const { meal_id, date, time, intake_type, served } = req.body;
+    console.log('Request body:', req.body);
+
 
     try {
         const insertIntake = db.prepare(`
@@ -15,7 +19,7 @@ router.post('/add', authenticateJWT,  (req, res, next) => {
         insertIntake.run(userId, meal_id, date, time, intake_type, served); // Using userId here
         res.status(201).json({ message: 'Meal intake successfully recorded!' }); 
     } catch (error) {
-        console.error("Error:", error.message);
+        console.error("Server Error:", error);
         res.status(500).json({ message: 'Error recording meal intake!' });
     }    
 });
@@ -68,7 +72,7 @@ router.get('/recent', authenticateJWT, (req, res, next) => {
 });
 
 
-router.get('/:date', authenticateJWT, (req, res, next) => {
+router.get('/:date', authenticateJWT, validateDate, (req, res, next) => {
     const userId = req.user.id; // This assumes authenticateJWT middleware adds the user object to req
     const date = req.params.date;
 
@@ -107,7 +111,7 @@ router.get('/:date', authenticateJWT, (req, res, next) => {
 });
 
 // Delete a specific user meal intake entry
-router.delete('/delete/:id', authenticateJWT, (req, res, next) => {
+router.delete('/delete/:id', authenticateJWT, validateIntakeId, (req, res, next) => {
     const userId = req.user.id;
     const id = req.params.id;
 
@@ -135,7 +139,5 @@ router.delete('/delete/:id', authenticateJWT, (req, res, next) => {
         res.status(500).json({ message: 'Error deleting meal intake entry.' });
     }
 });
-
-
 
 module.exports = router;

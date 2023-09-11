@@ -3,17 +3,17 @@ import React from 'react';
 function RecentMealIntake({ recentIntake, handleDeleteUserMealIntake }) {
     return (
         <div className="recent-meal-intake">
-            
-            <ul>
+            <div className="list-group">
                 {recentIntake.map(entry => (
-                    <li key={entry.id}>
-                        {entry.meal_name} at {entry.date} {entry.time}
-                        <button onClick={() => handleDeleteUserMealIntake(entry.id)}>Delete</button>
-                    </li>
+                    <div key={entry.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{entry.meal_name} at {entry.date} {entry.time}</span>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUserMealIntake(entry.id)}>Delete</button>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 }
 
 export default RecentMealIntake;
+
