@@ -48,7 +48,14 @@ const handleTokenExpiry = async () => {
 const customFetch = async (url, options = {}) => {
     try {
         const response = await fetch(url, { ...options, credentials: 'include' });
-        if (response.status === 401) {
+        
+        // If the response is unauthorized and there's no auth token, redirect to login
+        if (response.status === 401 && !options.headers?.Authorization) {
+            throw new Error(SESSION_EXPIRED_MSG);
+        }
+
+        // If the response is unauthorized and there's an auth token, try to refresh the token
+        if (response.status === 401 && options.headers?.Authorization) {
             const newToken = await handleTokenExpiry();
             options.headers = {
                 ...options.headers,
@@ -56,19 +63,20 @@ const customFetch = async (url, options = {}) => {
             };
             return fetch(url, options);
         }
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || SERVER_ERROR_MSG);
         }
+        
         return response;
     } catch (error) {
         if (error.message === SESSION_EXPIRED_MSG) {
-            window.location.href = '/login';
+            //window.location.href = '/login';
         }
         throw error;
     }
 }
-
 
 const processResponse = async (response) => {
     if (!response.ok) {

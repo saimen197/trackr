@@ -6,13 +6,19 @@ import { toast } from 'react-toastify';
 import { logoutUser } from './api';
 
 function Navbar() {
-    const { isLoggedIn, redirectToLogin, usernameLoggedIn } = useAuth();
+    const { setIsLoggedIn, isLoggedIn, usernameLoggedIn } = useAuth(); // get setAuthState from useAuth
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
-            const result = await logoutUser(); 
-            redirectToLogin();
+            const result = await logoutUser();
+
+            // Update the auth context state to reflect logout
+            setIsLoggedIn(false);
+            setUsernameLoggedIn(null);
+            setUserId(null);
+            setUser(null);
+
             navigate('/login');
             toast.info(result.message || 'Logged out successfully.');
         } catch (error) {

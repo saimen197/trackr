@@ -1,6 +1,7 @@
 .modal-content {
     max-height: 90vh;
-    max-width: 90vw; 
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: auto;
     background-color: #1E1E1E;
@@ -29,8 +30,10 @@
 }
 
 body {
+    background-image: url("background.jpeg");
     background-color: #121212;
-    color: #EAEAEA;
+    background-size: 100% auto;
+    background-position: center top;
 }
 
 .card {
@@ -146,15 +149,15 @@ body {
     background: none;
     border: none;
     opacity: 0.5;
-    position: relative; /* Enable relative positioning */
-    top: -30px; /* Adjust the vertical position; you can change the value as needed */
-    right: 10px; /* Adjust the horizontal position; you can change the value as needed */
 }
 
 .btn-close:before {
     content: '×'; /* The '×' character, can be replaced with SVG or another character */
     color: #aaa; /* A light grey color to contrast the dark background */
     font-size: 42px; /* Adjust to fit the desired size */
+    position: relative; /* Enable relative positioning for the content */
+    top: -30px; /* Adjust the vertical position of the content */
+    right: 10px; /* Adjust the horizontal position of the content */
 }
 
 .btn-close:hover {
@@ -172,6 +175,7 @@ body {
 .list-group-item .font-weight-bold {
     color: #FFFFFF; /* even lighter for selected or emphasized items */
 }
+
 
 .dark-theme {
     background-color: #222;
@@ -207,6 +211,8 @@ body {
 .dark-table {
     color: #ddd; 
     border-collapse: collapse;
+    width: auto;
+    font-size: 0.8em; 
 }
 
 .dark-table td {
@@ -218,7 +224,7 @@ body {
 
 .dark-table th, .dark-table td {
     border: 1px solid #444;
-    padding: 8px 12px;
+    padding: 4px 6px;
 }
 
 /* For Table Headers */
@@ -260,5 +266,41 @@ body {
 }
 .dark-theme-title {
     color: #ccc;
+}
+
+.totals-container {
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #585344; /* Dark grayish color from your theme */
+}
+
+.totals-container div {
+    padding: 2px 0; /* Some vertical padding for breathing space */
+}
+
+.totals-container strong {
+    margin-right: 5px;
+}
+
+/* Login Prompt Styling */
+.login-prompt {
+    background-color: #1E1E1E;
+    color: #EAEAEA; /* light text color for contrast */
+    padding: 10px; /* Some padding for aesthetic */
+    border-radius: 5px; /* Rounded corners */
+    text-align: center; /* Centered text */
+    margin-top: 50px; /* Some margin from the top to vertically center a bit */
+}
+
+.login-prompt a {
+    color: #01B8A5; /* Using the muted cyan from your buttons */
+    text-decoration: none; /* Removing the underline */
+    font-weight: bold; /* Bold to make it stand out more */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
+}
+
+.login-prompt a:hover {
+    color: #019C8A; /* A slightly darker muted cyan for hover effect */
 }
 

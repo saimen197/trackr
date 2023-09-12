@@ -207,8 +207,12 @@ function MealsList() {
                     <div 
                         key={meal.id} 
                         className="list-group-item"
-                        onClick={() => handleMealClick(meal.id)}
-                    >
+                        onClick={(e) => {
+                            if (e.currentTarget === e.target) {
+                                handleMealClick(meal.id);
+                            }
+                        }}                        
+                    >                 
                         {isEditing && isEditing.mealId === meal.id && isEditing.field === 'name' ? (
                             <div className="d-flex align-items-center">
                                 <input 
@@ -257,7 +261,12 @@ function MealsList() {
                                 )}
                             </div>
                         )}
-
+                        <button 
+                            className="btn-outline-info" 
+                            onClick={() => handleMealClick(meal.id)}
+                        >
+                            {expandedMealId === meal.id ? '-' : '+'}
+                        </button>     
                         {expandedMealId === meal.id && (
                             <div className="mt-2">
                                 {isEditing && isEditing.mealId === meal.id && isEditing.field === 'info' ? (
@@ -272,7 +281,14 @@ function MealsList() {
                                         <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
                                     </div>
                                 ) : (
-                                    <p onDoubleClick={() => startEditing(meal.id, 'info', meal.info)}>Description: {meal.info}</p>
+                                    <p 
+                                        onDoubleClick={(e) => {
+                                            e.stopPropagation();  
+                                            startEditing(meal.id, 'info', meal.info);
+                                        }}
+                                    >
+                                        Description: {meal.info}
+                                    </p>
                                 )}
 
                                 {isEditing && isEditing.mealId === meal.id && isEditing.field === 'type' ? (
@@ -292,9 +308,15 @@ function MealsList() {
                                         <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
                                     </div>
                                 ) : (
-                                    <p onDoubleClick={() => startEditing(meal.id, 'type', meal.meal_type)}>Type: {meal.meal_type}</p>
+                                    <p 
+                                        onDoubleClick={(e) => {
+                                            e.stopPropagation();  
+                                            startEditing(meal.id, 'type', meal.meal_type);
+                                        }}
+                                    >
+                                        Type: {meal.meal_type}
+                                    </p>                                
                                 )}
-
                                 <ul className="list-unstyled">
                                     <strong>Ingredients:</strong>
                                     {meal.ingredients.map(ingredient => (

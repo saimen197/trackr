@@ -79,11 +79,10 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     }, [amount]);
 
     useEffect(() => {
-        setIsSaveValid(mealType);
-    }, [mealType]);
+        setIsSaveValid(servings !== "" && mealType);
+    }, [servings, mealType]);
 
     useEffect(() => {
-        // The button is valid if there's a meal name and at least one ingredient added.
         setIsValid(mealName.trim() !== "" && mealIngredients.length > 0);
     }, [mealName, mealIngredients]);
 
@@ -147,6 +146,14 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
 
         checkForChanges();
     }, [mealName, description, mealIngredients]);
+
+    useEffect(() => {
+        if (!isSaveModalOpen) {
+            // Whenever the save modal is closed, set hasChanged to true
+            setHasChanged(true);
+        }
+    }, [isSaveModalOpen]);
+
 
     const normalizeInitialIngredients = async (ingredients) => {
         let initialTotals = {
@@ -454,12 +461,17 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
             ))}
 
             {/* 3. Totals and Buttons */}
-            <div className="mb-2">
-                <strong>Total Calories:</strong> {Math.round(totals.calories)}
-                <strong>Total Protein:</strong> {Math.round(totals.protein)}g
-                <strong>Total Carbs:</strong> {Math.round(totals.carbs)}g
-                <strong>Total Fats:</strong> {Math.round(totals.fats)}g
+            <div className="totals-container mb-2">
+                <div className="d-flex justify-content-between">
+                    <div><strong>Total Calories:</strong> {Math.round(totals.calories)}</div>
+                    <div><strong>Total Protein:</strong> {Math.round(totals.protein)}g</div>
+                </div>
+                <div className="d-flex justify-content-between mt-2">
+                    <div><strong>Total Carbs:</strong> {Math.round(totals.carbs)}g</div>
+                    <div><strong>Total Fats:</strong> {Math.round(totals.fats)}g</div>
+                </div>
             </div>
+
 
             {hasChanged ? (                
                 <button onClick={openSaveModal} className="btn btn-primary mb-2" disabled={!isValid}> Save and Log Meal</button>
@@ -543,7 +555,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Save Meal</h5>
-                                <button type="button" className="close" onClick={() => setIsSaveModalOpen(false)}>&times;</button>
+                                <button type="button" className="btn-close" onClick={() => setIsSaveModalOpen(false)}>&times;</button>
                             </div>
                             <div className="modal-body">
                                 <label htmlFor="servings" className="mb-2">Number of Servings:</label>
@@ -553,9 +565,17 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                                     className="form-control mb-2"
                                     value={servings}
                                     onChange={(e) => {
-                                        const val = parseInt(e.target.value);
-                                        if (val > 0 && Number.isInteger(val)) {
-                                            setServings(val);
+                                        const val = e.target.value;
+
+                                        if (val === '') {
+                                            // Handle empty input by setting servings to an empty string
+                                            setServings('');
+                                            return;
+                                        }
+
+                                        const parsedVal = parseInt(val);
+                                        if (parsedVal > 0 && Number.isInteger(parsedVal)) {
+                                            setServings(parsedVal);
                                         }
                                     }}
                                 />

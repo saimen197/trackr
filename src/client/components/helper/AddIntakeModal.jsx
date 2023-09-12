@@ -6,14 +6,23 @@ function AddIntakeModal({ isOpen, onConfirm, onCancel }) {
     const [intakeType, setIntakeType] = useState(''); 
     const [served, setServed] = useState('1'); 
 
+    const resetFields = () => {
+        setSelectedDate(new Date());
+        setIntakeType('');
+        setServed('1');
+    }
+
     const handleConfirm = () => {
         onConfirm(selectedDate, intakeType, served);
+        resetFields();
     }
 
     return (
         <Modal show={isOpen} onHide={onCancel}>
             <Modal.Header>
                 <Modal.Title>Add Meal to daily intake</Modal.Title>
+                <button type="button" className="btn-close" onClick={() => { onCancel(); resetFields(); }}>&times;</button>
+
             </Modal.Header>
             <Modal.Body>
                 <Form.Group className="mb-3">
@@ -49,7 +58,7 @@ function AddIntakeModal({ isOpen, onConfirm, onCancel }) {
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="primary" onClick={handleConfirm} disabled={!intakeType}>Add to intake</Button>
-                <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+                <Button variant="secondary" onClick={() => { onCancel(); resetFields(); }}>Cancel</Button>
             </Modal.Footer>
         </Modal>
     );

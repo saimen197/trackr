@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Outlet } from 'react-router-dom';
 
 import Layout from './Layout';
 import Home from './components/Home';
@@ -11,41 +11,20 @@ import Register from './components/Register';
 import { MealProvider } from '/src/client/context/MealContext.jsx';
 import { ToastContainer } from 'react-toastify';
 import { useAuth } from './context/AuthContext';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../css/app.css';
+import { BeatLoader } from 'react-spinners';
 
+function ProtectedLayout() {
+  const { isLoggedIn } = useAuth();
 
-function requireAuth(Component) {
-  return function ProtectedComponent(props) {
-    const { isLoggedIn } = useAuth();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-      if (!isLoggedIn) {
-        navigate('/login');
-      }
-    }, [isLoggedIn, navigate]);
-
-    if (isLoggedIn) {
-      return <Component {...props} />;
-    } else {
-      return null;
-    }
+  if (!isLoggedIn) {
+      return <div className="login-prompt">Please <a href="/login">login</a> to access this content.</div>;
   }
+
+  return <Outlet />;
 }
-
-const ProtectedHome = requireAuth(Home);
-const ProtectedMainComponent = requireAuth(MainComponent);
-const ProtectedIngredientCreation = requireAuth(IngredientCreation);
-const ProtectedMealCreation = requireAuth(MealCreation);
-
-const protectedRoutes = [
-  <Route key="home" path='/' element={<ProtectedHome />} />,
-  <Route key="main" path='/main' element={<ProtectedMainComponent />} />,
-  <Route key="ingredient" path='/ingredient' element={<ProtectedIngredientCreation />} />,
-  <Route key="meal" path='/meal' element={<ProtectedMealCreation />} />,
-  <Route key="register" path='/register' element={<Register />} />
-];
 
 const App = () => {
   return (
@@ -60,10 +39,19 @@ const App = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-      />        
+      />
       <MealProvider>
         <Routes>
           <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
+
+          <Route path='/' element={<ProtectedLayout />}>
+            <Route index element={<Home />} />
+            <Route path='main' element={<MainComponent />} />
+            <Route path='ingredient' element={<IngredientCreation />} />
+            <Route path='meal' element={<MealCreation />} />
+          </Route>
+
           <Route
             key="notFound"
             path='*'
@@ -73,7 +61,6 @@ const App = () => {
               </div>
             }
           />
-          {protectedRoutes}
         </Routes>
       </MealProvider>
     </Layout>

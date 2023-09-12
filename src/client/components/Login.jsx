@@ -19,7 +19,7 @@ function Login() {
                 setUserId(response.user.id);
                 setUsernameLoggedIn(response.user.username);
                 setIsLoggedIn(true);
-                setNeedsRedirect(false);
+                //setNeedsRedirect(false);
                 toast.success("Logged in successfully!");
                 navigate('/main');
             } else {
