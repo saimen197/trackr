@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { logoutUser } from './api';
 
 function Navbar() {
-    const { setIsLoggedIn, isLoggedIn, usernameLoggedIn } = useAuth(); // get setAuthState from useAuth
+    const { setIsLoggedIn, isLoggedIn, usernameLoggedIn, setUsernameLoggedIn } = useAuth(); // get setAuthState from useAuth
     const navigate = useNavigate();
 
     const handleLogout = async () => {

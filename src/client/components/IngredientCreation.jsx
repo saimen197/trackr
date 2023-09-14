@@ -125,7 +125,7 @@ function IngredientCreation() {
                     onChange={(e) => setFats(e.target.value)}
                 />
             </div>
-            <button onClick={handleSubmit} className="btn btn-primary" disabled={!areFieldsValid()}>Save Ingredient</button>
+            <button onClick={handleSubmit} className="btn btn-primary me-2" disabled={!areFieldsValid()}>Save Ingredient</button>
         </div>
     );
 }

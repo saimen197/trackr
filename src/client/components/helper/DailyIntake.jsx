@@ -29,7 +29,6 @@ const DailyIntake = ({ date, recentIntake }) => {
 
     return (
         <div className="my-4 dark-theme">
-            <h5 className="mb-3 dark-theme-title">Daily Nutritional Goals</h5>
             <NutritionalBar label="Calories" value={data.total_calories || 0} max={DAILY_GOALS.total_calories} className="mb-2"/>
             <NutritionalBar label="Protein" value={data.total_protein || 0} max={DAILY_GOALS.total_protein} className="mb-2"/>
             <NutritionalBar label="Carbs" value={data.total_carbs || 0} max={DAILY_GOALS.total_carbs} className="mb-2"/>

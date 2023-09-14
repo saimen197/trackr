@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { Routes, Route, Outlet } from 'react-router-dom';
 
 import Layout from './Layout';
@@ -16,6 +17,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../css/app.css';
 import { BeatLoader } from 'react-spinners';
 
+const spinnerPlaceholder = document.getElementById('spinner-placeholder');
+
+if (spinnerPlaceholder) {
+    ReactDOM.render(<BeatLoader />, spinnerPlaceholder);
+}
+
+
 function ProtectedLayout() {
   const { isLoggedIn } = useAuth();
 
@@ -27,6 +35,10 @@ function ProtectedLayout() {
 }
 
 const App = () => {
+  const loader = document.getElementById('initial-loader');
+  if (loader) {
+      loader.style.display = 'none';
+  }
   return (
     <Layout>
       <ToastContainer 

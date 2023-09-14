@@ -10,7 +10,7 @@ import Modal from 'react-modal';
 //Modal.setAppElement('#contents');
 
 
-function MealCreation({ initialMealName = '', initialDescription = '', initialMealIngredients = [] }) {
+function MealCreation({ initialMealName = '', initialDescription = '', initialMealIngredients = [], initialMealType = '' }) {
     const isMounted = useRef(true);
 
     const [ingredients, setIngredients] = useState([]);
@@ -42,6 +42,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     const [hasChanged, setHasChanged] = useState(false);
     const [normalized, setNormalized] = useState(false);
     const isInitializing = useRef(true);
+    const inputRef = useRef(null);
 
     
     const { 
@@ -79,12 +80,19 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     }, [amount]);
 
     useEffect(() => {
-        setIsSaveValid(servings !== "" && mealType);
-    }, [servings, mealType]);
+        setIsSaveValid(servings !== "" && mealName !== "" && mealType);
+    }, [servings, mealName, mealType]);
 
     useEffect(() => {
-        setIsValid(mealName.trim() !== "" && mealIngredients.length > 0);
-    }, [mealName, mealIngredients]);
+        setIsValid(mealIngredients.length > 0);
+    }, [mealIngredients]);
+
+    useEffect(() => {
+        if (isModalOpen) {
+            inputRef.current.focus();
+        }
+    }, [isModalOpen]);
+
 
     useEffect(() => {
         getUnits()
@@ -110,8 +118,8 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
 
         async function initializeData() {
             setMealIngredients(initialMealIngredients);
-            setDescription(initialDescription);
             setMealName(initialMealName);
+            setMealType(initialMealType);
 
             const { normalizedIngredients, initialTotals } = await normalizeInitialIngredients(initialMealIngredients);
             
@@ -127,25 +135,22 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
         
         setInitialState({
             mealIngredients: initialMealIngredients,
-            description: initialDescription,
-            mealName: initialMealName
+            mealName: initialMealName,
+            mealType: initialMealType
         });
 
-    }, [initialMealName, initialDescription, initialMealIngredients]);
+    }, [initialMealName, initialMealIngredients, initialMealType]);
 
     useEffect(() => {
         const checkForChanges = () => {
-            if (!isInitializing.current && normalized && (initialState.mealName !== mealName ||
-                initialState.description !== description ||
-                JSON.stringify(initialState.mealIngredients) !== JSON.stringify(mealIngredients))) {
+            if (!isInitializing.current && normalized && (JSON.stringify(initialState.mealIngredients) !== JSON.stringify(mealIngredients))) {
                 setHasChanged(true);
             } else {
                 setHasChanged(false);
             }
         }
-
         checkForChanges();
-    }, [mealName, description, mealIngredients]);
+    }, [mealIngredients]);
 
     useEffect(() => {
         if (!isSaveModalOpen) {
@@ -295,7 +300,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
     };
 
     const handleDeleteIngredient = (ingredientId) => {
-        if (window.confirm('Are you sure you want to delete this ingredient?')) {
+        if (window.confirm('Are you sure you want to permanently delete this ingredient from the database?')) {
             deactivateIngredient(ingredientId)
                 .then(() => {
                     if (isMounted.current) {
@@ -310,6 +315,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                 });
         }
     };
+
     const openSaveModal = () => {
         setIsSaveModalOpen(true);
     }
@@ -436,59 +442,46 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
 
     return (
         <div className="dark-bg">
-            {/* 1. Inputs and Textareas */}
-            <input
-                type="text"
-                className="form-control dark-input mb-2"
-                placeholder="Meal Name"
-                value={mealName}
-                onChange={(e) => setMealName(e.target.value)}
-            />
+            {mealIngredients.length > 0 && (
+              <>
+                <h5 className="mb-3 dark-theme-title">Meal Ingredients:</h5>
 
-            <textarea 
-                className="form-control dark-input mb-2"
-                placeholder="Description or Additional Information"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-            ></textarea>
-
-            {/* 2. Ingredients List */}
-            {mealIngredients.map((ing, index) => (
+                {/* 2. Ingredients List */}
+                {mealIngredients.map((ing, index) => (
                 <div key={`${ing.ingredient_name || ing.name}-${index}`} className="ingredient-item d-flex justify-content-between align-items-center mb-2">
                     <span>{ing.amount} {ing.unit || units.find(u => u.id === ing.unitId)?.name} {ing.ingredient_name || ing.name}</span>
                     <button className="btn btn-sm btn-danger" onClick={() => removeIngredientFromMeal(index)}>Remove</button>
                 </div>
-            ))}
+                ))}
 
-            {/* 3. Totals and Buttons */}
-            <div className="totals-container mb-2">
-                <div className="d-flex justify-content-between">
-                    <div><strong>Total Calories:</strong> {Math.round(totals.calories)}</div>
-                    <div><strong>Total Protein:</strong> {Math.round(totals.protein)}g</div>
+                {/* 3. Totals and Buttons */}
+                <div className="totals-container mb-2">
+                    <div className="d-flex justify-content-between">
+                        <div><strong> Calories:</strong> {Math.round(totals.calories)}</div>
+                        <div><strong> Protein:</strong> {Math.round(totals.protein)}g</div>
+                        <div><strong> Carbs:</strong> {Math.round(totals.carbs)}g</div>
+                        <div><strong> Fats:</strong> {Math.round(totals.fats)}g</div>
+                    </div>
                 </div>
-                <div className="d-flex justify-content-between mt-2">
-                    <div><strong>Total Carbs:</strong> {Math.round(totals.carbs)}g</div>
-                    <div><strong>Total Fats:</strong> {Math.round(totals.fats)}g</div>
-                </div>
-            </div>
 
-
-            {hasChanged ? (                
+                {hasChanged ? (                
                 <button onClick={openSaveModal} className="btn btn-primary mb-2" disabled={!isValid}> Save and Log Meal</button>
-            ) : (
+                ) : (
                 <button onClick={setDatePickerOpen} className="btn btn-primary mb-2" disabled={!isValid}>Log Meal</button>
+                )}
+              </>
             )}
 
             {/* 4. Search Field */}
-            <input
+            <div className="d-flex justify-content-between align-items-center">
+                <input
                 className="form-control mb-2"
                 value={filterInput}
                 onChange={e => setFilterInput(e.target.value)}
                 placeholder="Search for an ingredient..."
-            />
-
-            <button className="btn btn-secondary mb-2" onClick={() => setIngredientModalOpen(true)}>Create New Ingredient</button>
-
+                />
+                <button className="btn btn-secondary mb-2" onClick={() => setIngredientModalOpen(true)}>Create New Ingredient</button>
+            </div>
             {/* 5. Table */}
             <div className="table-responsive">
             <table {...getTableProps()} className="dark-table table-responsive">
@@ -527,10 +520,10 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Add {currentIngredient?.name} to Meal</h5>
-                                <button type="button" className="close" onClick={closeModal}>&times;</button>
+                                <button type="button" className="btn-close" onClick={closeModal}>&times;</button>
                             </div>
                             <div className="modal-body">
-                                <input type="number" className="form-control mb-2" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" />
+                                <input ref={inputRef} type="number" className="form-control mb-2" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" />
                                 <select className="form-control mb-2" value={unit} onChange={(e) => setUnit(e.target.value)}>
                                     {units.map(u => (
                                         <option key={u.id} value={u.id}>
@@ -540,7 +533,7 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
                                 </select>
                             </div>
                             <div className="modal-footer">
-                                <button onClick={addIngredientToMeal} className="btn btn-primary" disabled={!isAmountValid}>Add to Meal</button>
+                                <button onClick={addIngredientToMeal} className="btn btn-primary mb-2" disabled={!isAmountValid}>Add to Meal</button>
                                 <button onClick={closeModal} className="btn btn-secondary">Cancel</button>
                             </div>
                         </div>
@@ -551,58 +544,81 @@ function MealCreation({ initialMealName = '', initialDescription = '', initialMe
             {/* Save Meal Modal */}
             {isSaveModalOpen && (
                 <div className="modal-overlay modal show d-block dark-modal">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">Save Meal</h5>
-                                <button type="button" className="btn-close" onClick={() => setIsSaveModalOpen(false)}>&times;</button>
-                            </div>
-                            <div className="modal-body">
-                                <label htmlFor="servings" className="mb-2">Number of Servings:</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="form-control mb-2"
-                                    value={servings}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title">Save Meal</h5>
+                        <button type="button" className="btn-close" onClick={() => setIsSaveModalOpen(false)}>&times;</button>
+                    </div>
+                    <div className="modal-body">
 
-                                        if (val === '') {
-                                            // Handle empty input by setting servings to an empty string
-                                            setServings('');
-                                            return;
-                                        }
+                        {/* Meal Name */}
+                        <label htmlFor="modalMealName" className="mb-2">Meal Name:</label>
+                        <input
+                        id="modalMealName"
+                        type="text"
+                        className="form-control mb-2"
+                        placeholder="Meal Name"
+                        value={mealName}
+                        onChange={(e) => setMealName(e.target.value)}
+                        />
 
-                                        const parsedVal = parseInt(val);
-                                        if (parsedVal > 0 && Number.isInteger(parsedVal)) {
-                                            setServings(parsedVal);
-                                        }
-                                    }}
-                                />
+                        {/* Servings */}
+                        <label htmlFor="servings" className="mb-2">Number of Servings:</label>
+                        <input
+                        type="number"
+                        min="1"
+                        className="form-control mb-2"
+                        value={servings}
+                        onChange={(e) => {
+                            const val = e.target.value;
 
-                                <label htmlFor="modalMealType" className="mb-2">Meal Type:</label>
-                                <select 
-                                    id="modalMealType"
-                                    className="form-control mb-2"
-                                    value={mealType} 
-                                    onChange={(e) => setMealType(e.target.value)}
-                                >
-                                    <option value="" disabled>Select meal type...</option>
-                                    <option value="breakfast">Breakfast</option>
-                                    <option value="lunch">Lunch</option>
-                                    <option value="dinner">Dinner</option>
-                                    <option value="snack">Snack</option>
-                                </select>
-                            </div>
-                            <div className="modal-footer">
-                                <button onClick={confirmSaveMeal} className="btn btn-primary" disabled={!isSaveValid} >Save Meal</button>
-                                <button onClick={() => setIsSaveModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                            </div>
-                        </div>
+                            if (val === '') {
+                            // Handle empty input by setting servings to an empty string
+                            setServings('');
+                            return;
+                            }
+
+                            const parsedVal = parseInt(val);
+                            if (parsedVal > 0 && Number.isInteger(parsedVal)) {
+                            setServings(parsedVal);
+                            }
+                        }}
+                        />
+
+                        {/* Meal Type */}
+                        <label htmlFor="modalMealType" className="mb-2">Meal Type:</label>
+                        <select 
+                        id="modalMealType"
+                        className="form-control mb-2"
+                        value={mealType} 
+                        onChange={(e) => setMealType(e.target.value)}
+                        >
+                        <option value="" disabled>Select meal type...</option>
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snack">Snack</option>
+                        </select>
+
+                        {/* Description */}
+                        <label htmlFor="modalDescription" className="mb-2">Description:</label>
+                        <textarea 
+                        id="modalDescription"
+                        className="form-control mb-2"
+                        placeholder="Description or Additional Information"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        ></textarea>
+                    </div>
+                    <div className="modal-footer">
+                        <button onClick={confirmSaveMeal} className="btn btn-primary" disabled={!isSaveValid} >Save Meal</button>
+                        <button onClick={() => setIsSaveModalOpen(false)} className="btn btn-secondary">Cancel</button>
+                    </div>
                     </div>
                 </div>
+                </div>
             )}
-
             {/* Ingredient Creation Modal */}
             {isIngredientModalOpen && (
                 <div className="modal-overlay modal show d-block dark-modal">

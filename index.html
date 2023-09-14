@@ -4,8 +4,31 @@
   <title>Node react blank</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+    #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a1a1a; /* Dark background color */
+        z-index: 9999; /* Ensure it's on top */
+    }
+
+</style>
+
+
 </head>
 <body>
+  <div id="initial-loader" class="dark-theme">
+      <div id="spinner-placeholder"></div>
+  </div>
+
+
+  
     <div id="contents"></div>
     <footer class="footer">
     <script type="module" src="/src/client/index.jsx"></script>

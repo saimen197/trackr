@@ -26,7 +26,9 @@ function MealsList() {
         addedMealInfo,
         setAddedMealInfo,
         addedMealIngredients,
-        setAddedMealIngredients
+        setAddedMealIngredients,
+        addedMealType,
+        setAddedMealType
     } = useMeals();
 
     const [expandedMealId, setExpandedMealId] = useState(null);
@@ -54,13 +56,15 @@ function MealsList() {
 
     }, []);
 
-    const handleAddButtonClick = (mealId, mealName, mealInfo, mealIngredients) => {
+    const handleAddButtonClick = (mealId, mealName, mealIngredients, mealType) => {
         setSelectedMealId(mealId);
         openMealCreationModal();
         setAddedMealName(mealName);
-        setAddedMealInfo(mealInfo);
         setAddedMealIngredients(mealIngredients);
+        setAddedMealType(mealType);
         console.log('addedMealIngredients: ', addedMealIngredients);
+        console.log('addedMealType: ', addedMealType);
+
         //setDatePickerOpen(true);
     };
 
@@ -74,19 +78,12 @@ function MealsList() {
     };
 
     const handleDeleteMealPrompt = (mealId) => {
-        toast.warning(
-            <div>
-                Are you sure you want to delete this meal?
-                <button onClick={(e) => { 
-                    e.stopPropagation(); 
-                    handleDeleteMeal(mealId);
-                    fetchRecentUserMealIntake();
-                }}>
-                    Confirm
-                </button>
-            </div>
-        );
-    };   
+        if (window.confirm('Are you sure you want to permanently delete this meal?')) {
+            handleDeleteMeal(mealId);
+            fetchRecentUserMealIntake();
+        }
+    };
+
 
         async function handleDeleteMeal(mealId) {
         try {
@@ -174,11 +171,7 @@ function MealsList() {
     return (
         <>
             <div className="d-flex justify-content-between align-items-center mb-3">
-                {/* Render meals */}
-                <button className="btn btn-secondary" onClick={openMealCreationModal}>Create New Meal</button>
-            </div>
 
-            <div className="d-flex align-items-center mb-3">
                 {/* Search Input */}
                 <input 
                     type="text"
@@ -187,6 +180,12 @@ function MealsList() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search for a meal..."
                 />
+
+                {/* Render meals */}
+                <button className="btn btn-secondary" onClick={openMealCreationModal}>Create New Meal</button>
+
+
+            </div>
 
                 {/* Filter buttons */}
                 <div className="btn-group">
@@ -200,159 +199,110 @@ function MealsList() {
                         </button>
                     ))}
                 </div>
-            </div>
-
             <ul className="list-group">
                 {filteredMeals.map(meal => (
                     <div 
-                        key={meal.id} 
-                        className="list-group-item"
-                        onClick={(e) => {
-                            if (e.currentTarget === e.target) {
-                                handleMealClick(meal.id);
-                            }
-                        }}                        
-                    >                 
-                        {isEditing && isEditing.mealId === meal.id && isEditing.field === 'name' ? (
-                            <div className="d-flex align-items-center">
-                                <input 
-                                    type="text"
-                                    className="form-control me-2"
-                                    value={editedMealName}
-                                    onChange={(e) => setEditedMealName(e.target.value)}
-                                />
-                                <button className="btn btn-success me-2" onClick={saveChanges}>Save</button>
-                                <button className="btn btn-secondary" onClick={abortEditing}>Cancel</button>
-                            </div>
-                        ) : (
-                            <div className="d-flex align-items-center">
-                                <span                                     
-                                    onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
-                                    className={`me-2 ${selectedMealId === meal.id ? 'font-weight-bold' : ''}`}
-                                >
-                                    {meal.name}
-                                </span>
-                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'servings' ? (
-                                    <div className="d-flex align-items-center">
-                                        <input 
-                                            type="number"
-                                            className="form-control me-2"
-                                            min="1"
-                                            value={editedMealServings}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value);
-                                                if (val > 0 && Number.isInteger(val)) {
-                                                    setEditedMealServings(val);
-                                                }
-                                            }}                                            
-                                        />
-                                        <span className="me-2">servings</span>
-                                        <button className="btn btn-success me-2" onClick={saveChanges}>Save</button>
-                                        <button className="btn btn-secondary" onClick={abortEditing}>Cancel</button>
-                                    </div>
-                                ) : (
-                                    <span 
-                                        onClick={() => handleMealClick(meal.id)}
-                                        onDoubleClick={() => startEditing(meal.id, 'servings', meal.servings)}
-                                        className={selectedMealId === meal.id ? 'font-weight-bold' : ''}
-                                    >
-                                        , {meal.servings} servings
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                    key={meal.id} 
+                    className="list-group-item"
+                    onClick={(e) => {
+                        if (e.currentTarget === e.target) {
+                        handleMealClick(meal.id);
+                        }
+                    }}                        
+                    >
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center">
                         <button 
-                            className="btn-outline-info" 
+                            className="btn-outline-info me-2" 
                             onClick={() => handleMealClick(meal.id)}
                         >
-                            {expandedMealId === meal.id ? '-' : '+'}
-                        </button>     
-                        {expandedMealId === meal.id && (
-                            <div className="mt-2">
-                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'info' ? (
-                                    <div className="mb-2">
-                                        <textarea 
-                                            className="form-control"
-                                            value={editedMealInfo}
-                                            onChange={(e) => setEditedMealInfo(e.target.value)}
-                                            placeholder="Info about the meal"
-                                        ></textarea>
-                                        <button className="btn btn-success mt-2" onClick={saveChanges}>Save</button>
-                                        <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
-                                    </div>
-                                ) : (
-                                    <p 
-                                        onDoubleClick={(e) => {
-                                            e.stopPropagation();  
-                                            startEditing(meal.id, 'info', meal.info);
-                                        }}
-                                    >
-                                        Description: {meal.info}
-                                    </p>
-                                )}
-
-                                {isEditing && isEditing.mealId === meal.id && isEditing.field === 'type' ? (
-                                    <div className="mb-2">
-                                        <select 
-                                            className="form-control"
-                                            value={editedMealType}
-                                            onChange={(e) => setEditedMealType(e.target.value)}
-                                        >
-                                            <option value="" disabled>Select meal type...</option>
-                                            <option value="breakfast">Breakfast</option>
-                                            <option value="lunch">Lunch</option>
-                                            <option value="dinner">Dinner</option>
-                                            <option value="snack">Snack</option>
-                                        </select>
-                                        <button className="btn btn-success mt-2" onClick={saveChanges}>Save</button>
-                                        <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
-                                    </div>
-                                ) : (
-                                    <p 
-                                        onDoubleClick={(e) => {
-                                            e.stopPropagation();  
-                                            startEditing(meal.id, 'type', meal.meal_type);
-                                        }}
-                                    >
-                                        Type: {meal.meal_type}
-                                    </p>                                
-                                )}
-                                <ul className="list-unstyled">
-                                    <strong>Ingredients:</strong>
-                                    {meal.ingredients.map(ingredient => (
-                                        <li key={ingredient.ingredient_name}>
-                                            {ingredient.ingredient_name} - {ingredient.amount} {ingredient.unit}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        <div className="mt-2 d-flex justify-content-end">
-                            {/* Only render these buttons if neither 'name' nor 'servings' are being edited */}
-                            {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
-                                <>
-                                    <button 
-                                        className="btn btn-primary me-2"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleAddButtonClick(meal.id, meal.name, meal.info, meal.ingredients);
-                                        }}
-                                    >
-                                        Add to daily intake
-                                    </button>
-
-                                    <button 
-                                        className="btn btn-danger"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteMealPrompt(meal.id);
-                                        }}
-                                    >
-                                        Delete
-                                    </button>
-                                </>
-                            ) : null}
+                            {expandedMealId === meal.id ? '-' : '...'}
+                        </button>
+                        <span                                     
+                            onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
+                            className={`me-2 ${selectedMealId === meal.id ? 'font-weight-bold' : ''}`}
+                        >
+                            {meal.name}
+                        </span>
                         </div>
+                        <div>
+                        {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
+                            <button 
+                            className="btn btn-primary me-2"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                        console.log('MealType: ', meal.meal_type);
+                                handleAddButtonClick(meal.id, meal.name, meal.ingredients, meal.meal_type);
+                            }}
+                            >
+                            Add
+                            </button>
+                        ) : null}
+                        {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
+                            <button 
+                            className="btn btn-danger"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMealPrompt(meal.id);
+                            }}
+                            >
+                            Delete
+                            </button>
+                        ) : null}
+                        </div>
+                    </div>
+
+                    {/* Rest of the expanded content */}
+                    {expandedMealId === meal.id && (
+                        <div className="mt-2">
+
+                        {/* Servings */}
+                        <div className="mt-2">
+                            Serves: {meal.servings}
+                        </div>
+
+                        {isEditing && isEditing.mealId === meal.id && isEditing.field === 'info' ? (
+                            <div className="mb-2">
+                            <textarea 
+                                className="form-control"
+                                value={editedMealInfo}
+                                onChange={(e) => setEditedMealInfo(e.target.value)}
+                                placeholder="Info about the meal"
+                            ></textarea>
+                            <button className="btn btn-success mt-2" onClick={saveChanges}>Save</button>
+                            <button className="btn btn-secondary mt-2" onClick={abortEditing}>Cancel</button>
+                            </div>
+                        ) : (
+                            <p 
+                            onDoubleClick={(e) => {
+                                e.stopPropagation();  
+                                startEditing(meal.id, 'info', meal.info);
+                            }}
+                            >
+                            Description: {meal.info}
+                            </p>
+                        )}
+
+                        {/* Type */}
+                        <p 
+                            onDoubleClick={(e) => {
+                            e.stopPropagation();  
+                            startEditing(meal.id, 'type', meal.meal_type);
+                            }}
+                        >
+                            Type: {meal.meal_type}
+                        </p>
+
+                        <ul className="list-unstyled">
+                            <strong>Ingredients:</strong>
+                            {meal.ingredients.map(ingredient => (
+                            <li key={ingredient.ingredient_name}>
+                                {ingredient.ingredient_name} - {ingredient.amount} {ingredient.unit}
+                            </li>
+                            ))}
+                        </ul>
+                        </div>
+                    )}
                     </div>
                 ))}
             </ul>
@@ -363,14 +313,14 @@ function MealsList() {
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Create Meal</h5>
+                                <div className="card-header"><h3>Create New Meal</h3></div>
                                 <button type="button" className="btn-close" onClick={closeMealCreationModal}></button>
                             </div>
                             <div className="modal-body">
                                 <MealCreation 
                                     initialMealName={addedMealName}
-                                    initialDescription={addedMealInfo}
                                     initialMealIngredients={addedMealIngredients}
+                                    initialMealType={addedMealType}                                    
                                 />
                             </div>
                         </div>

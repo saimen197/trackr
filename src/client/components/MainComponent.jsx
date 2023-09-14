@@ -134,9 +134,9 @@ return (
 
             {/* Recent Meals Logged Card */}
             <div className="col-md-6 mb-4">
-                <div className="card shadow-sm rounded">
+                <div className="card shadow-sm rounded card-recent">
                     <div className="card-header">
-                        <h2>Recent Meals logged</h2>
+                        <h2>Last Meals logged</h2>
                     </div>
                     <div className="card-body">     
                         <RecentMealIntake recentIntake={recentIntake} handleDeleteUserMealIntake={handleDeleteUserMealIntake} />
@@ -146,7 +146,7 @@ return (
         </div>
         
         {/* Meals List Card */}
-        <div className="card shadow-sm rounded mb-4">
+        <div className="card shadow-sm rounded mb-4 card-log">
             <div className="card-header">
                 <h2>Log Meals</h2>
             </div>

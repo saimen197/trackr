@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // make sure it's imported from react-router-dom
 import { checkAuthStatus } from '../api';
 import { BeatLoader } from 'react-spinners';
 
@@ -27,6 +28,8 @@ export const AuthProvider = ({ children }) => {
         setHasCheckedAuth(true);  
         setLoading(false);
         setIsLoggedIn(false);
+        const navigate = useNavigate();
+        navigate('/login');
       }
     };
     checkUserAuthentication();
@@ -34,9 +37,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, setUser, isLoggedIn, setIsLoggedIn, userId, setUserId, usernameLoggedIn, setUsernameLoggedIn, hasCheckedAuth }}>
-      {isLoading ? < BeatLoader /> : children}
+      {isLoading ? 
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'black' }}>
+          <BeatLoader color={"#123abc"} />
+        </div> : 
+        children
+      }
     </AuthContext.Provider>
   );
+
 };
 
 export const useAuth = () => {

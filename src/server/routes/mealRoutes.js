@@ -13,7 +13,8 @@ router.get('/all', (req, res, next) => {
             SELECT 
                 mi.meal_id, 
                 i.name as ingredient_name, 
-                mi.amount, 
+                mi.amount,
+                m.meal_type,
                 u.name as unit,
                 i.calories, 
                 i.protein, 
@@ -22,6 +23,7 @@ router.get('/all', (req, res, next) => {
             FROM meal_ingredients mi
             JOIN ingredients i ON mi.ingredient_id = i.id
             JOIN units u ON mi.unit_id = u.id
+            JOIN meals m ON mi.meal_id = m.id
         `);
 
         const allIngredients = ingredientsStmt.all();

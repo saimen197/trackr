@@ -22,7 +22,8 @@ export const MealProvider = ({ children }) => {
   const [addedMealName, setAddedMealName] = useState('');
   const [addedMealInfo, setAddedMealInfo] = useState(''); 
   const [addedMealIngredients, setAddedMealIngredients] = useState([]); 
-
+  const [addedMealType, setAddedMealType] = useState(''); 
+ 
   const openMealCreationModal = () => setIsMealCreationOpen(true);
   const closeMealCreationModal = () => {
     setAddedMealName('');
@@ -83,8 +84,10 @@ export const MealProvider = ({ children }) => {
         addedMealInfo,
         setAddedMealInfo,
         addedMealIngredients,
-        setAddedMealIngredients
-      }}>
+        setAddedMealIngredients,
+        addedMealType, 
+        setAddedMealType      
+        }}>
       {children}
     </MealContext.Provider>
   );

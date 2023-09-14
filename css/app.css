@@ -117,6 +117,13 @@ body {
     border-color: #018077;
 }
 
+.btn-primary:disabled {
+    background-color: #8EB8B5; /* You can choose a muted version of your primary color */
+    border-color: #7DA9A0;
+    color: #565656; /* You can choose a grey color for text to signify it's disabled */
+    cursor: not-allowed; /* The 'no entry' cursor, indicating an action is not permitted */
+}
+
 
 .btn-info {
     background-color: #9FA8DA; /* muted version of the cyan */
