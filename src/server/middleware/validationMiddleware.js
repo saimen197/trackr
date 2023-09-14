@@ -56,8 +56,23 @@ const validateMeal = [
     check('name').trim().notEmpty().withMessage('Name is required'),
     check('info').optional().isString().withMessage('Info should be a string'),
     check('meal_type').isIn(["breakfast", "lunch", "dinner", "snack"]).withMessage('Invalid meal type'),
-    check('servings').isInt({min: 1}).withMessage('Servings should be an integer greater than 0'),
-    // ... More checks, especially for the 'ingredients' array
+    check('servings').isInt({ min: 1 }).withMessage('Servings should be an integer greater than 0'),
+    check('ingredients')
+        .isArray()
+        .withMessage('Ingredients should be an array')
+        .notEmpty()
+        .withMessage('At least one ingredient is required'),
+    check('ingredients.*.ingredientId').isInt({ min: 1 }).withMessage('Invalid ingredient ID'),
+    check('ingredients.*.amount')
+        .notEmpty()
+        .withMessage('Amount is required')
+        .isFloat({ min: 0 })
+        .withMessage('Amount should be a positive number'),
+    check('ingredients.*.unitId')
+        .notEmpty()
+        .withMessage('Unit ID is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid unit ID'),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -66,6 +81,8 @@ const validateMeal = [
         next();
     }
 ];
+
+
 
 module.exports = {
     validateIngredient,

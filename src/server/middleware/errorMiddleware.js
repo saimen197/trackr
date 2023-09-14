@@ -1,5 +1,5 @@
 module.exports = function(err, req, res, next) {
-    console.error(err.stack); // Logs the stack trace of the error for debugging
+    console.error(err.stack); 
 
     // If the error has a status, it's a custom error thrown elsewhere in the app
     if (err.status && err.message) {

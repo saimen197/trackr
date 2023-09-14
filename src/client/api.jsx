@@ -4,6 +4,7 @@ const SESSION_EXPIRED_MSG = 'Session expired. Please login again.';
 let isRefreshing = false;
 let failedQueue = [];
 
+//prevent infinite error loops
 const processQueue = (error, token = null) => {
     failedQueue.forEach(prom => {
         if (error) {
@@ -49,7 +50,7 @@ const customFetch = async (url, options = {}) => {
     try {
         const response = await fetch(url, { ...options, credentials: 'include' });
         
-        // If the response is unauthorized and there's no auth token, redirect to login
+        // If the response is unauthorized and there's no auth token 
         if (response.status === 401 && !options.headers?.Authorization) {
             throw new Error(SESSION_EXPIRED_MSG);
         }
@@ -71,9 +72,6 @@ const customFetch = async (url, options = {}) => {
         
         return response;
     } catch (error) {
-        if (error.message === SESSION_EXPIRED_MSG) {
-            //window.location.href = '/login';
-        }
         throw error;
     }
 }
@@ -105,9 +103,10 @@ export const createIngredient = async (ingredientData) => {
             body: JSON.stringify(ingredientData)
         });
         const responseData = await processResponse(response);
+
         const { ingredientId } = responseData;
-        console.log("Created ingredient with ID:", ingredientId);
         return ingredientId;
+
     } catch (error) {
         console.error("Error:", error);
         throw error;
@@ -157,9 +156,7 @@ export const getUnitIdByName = async (unitName) => {
     }
 };
 
-
 //Meal routes
-
 export const getAllMeals = async () => {
     try {
         const response = await customFetch('/api/meals/all');
@@ -229,7 +226,6 @@ const updateMeal = async (mealId, key, value) => {
 export const updateMealName = (mealId, name) => updateMeal(mealId, 'name', name);
 export const updateMealInfo = (mealId, info) => updateMeal(mealId, 'info', info);
 export const updateMealType = (mealId, mealType) => updateMeal(mealId, 'mealType', mealType);
-export const updateMealServings = (mealId, servings) => updateMeal(mealId, 'servings', servings);
 
 //intake routes
 export const saveUserMealIntake = async (intakeData) => {
@@ -286,7 +282,6 @@ export const getUserNutritionalIntake = async (date) => {
 };
 
 // User Routes
-
 export const registerUser = async (userData) => {
     try {
         const response = await customFetch('/api/users/register', {

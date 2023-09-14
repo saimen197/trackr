@@ -9,32 +9,28 @@ export const useMeals = () => {
 
 export const MealProvider = ({ children }) => {
   const [meals, setMeals] = useState([]);
-  const [isMealCreationOpen, setIsMealCreationOpen] = useState(false);
   const [newMealId, setNewMealId] = useState(null); 
   const [createdIngredientId, setCreatedIngredientId] = useState(null); 
   const [createdIngredient, setCreatedIngredient] = useState(false); 
-
   const [currentIngredient, setCurrentIngredient] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState('');
-  const [isIngredientModalOpen, setIngredientModalOpen] = useState(false);
 
   const [addedMealName, setAddedMealName] = useState('');
-  const [addedMealInfo, setAddedMealInfo] = useState(''); 
   const [addedMealIngredients, setAddedMealIngredients] = useState([]); 
   const [addedMealType, setAddedMealType] = useState(''); 
+
+  const [isIngredientModalOpen, setIngredientModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMealCreationOpen, setIsMealCreationOpen] = useState(false);  
+  const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedMealId, setSelectedMealId] = useState(null);
  
   const openMealCreationModal = () => setIsMealCreationOpen(true);
   const closeMealCreationModal = () => {
     setAddedMealName('');
-    setAddedMealInfo('');
     setAddedMealIngredients([]);
     setIsMealCreationOpen(false);
-  } 
-  
-
-  const [isDatePickerOpen, setDatePickerOpen] = useState(false);
-  const [selectedMealId, setSelectedMealId] = useState(null);
+  }   
 
   const closeModal = () => {
     setCurrentIngredient(null);
@@ -81,8 +77,6 @@ export const MealProvider = ({ children }) => {
         setSelectedMealId,
         addedMealName,
         setAddedMealName,
-        addedMealInfo,
-        setAddedMealInfo,
         addedMealIngredients,
         setAddedMealIngredients,
         addedMealType, 

@@ -17,11 +17,11 @@ router.post('/register', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert the new user into the database
+        // Insert new user into database
         const stmt = db.prepare('INSERT INTO users (username, email, hashed_password) VALUES (?, ?, ?)');
         stmt.run(username, email, hashedPassword);
-
         res.json({ message: "User registered successfully!" });
+
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error.');
@@ -30,9 +30,8 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res, next) => {
     try {
-        console.log(req.body);
-        const { username, password } = req.body;
 
+        const { username, password } = req.body;
         const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
         if (!user) {
@@ -45,8 +44,8 @@ router.post('/login', async (req, res, next) => {
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
-        let accessToken, refreshToken;
-
+        // Get access and refresh Tokens
+        let accessToken, refreshToken;        
         try {
             accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
             refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
@@ -55,15 +54,16 @@ router.post('/login', async (req, res, next) => {
             throw new Error("Authentication error.");
         }
 
-        // Check if refreshToken already exists in the table
+        // Store refreshToken in the refresh Tokens if it does not exist already
         const existingToken = db.prepare('SELECT * FROM refreshTokens WHERE token = ?').get(refreshToken);
         
         if (!existingToken) {
-            // Store refreshToken in the refreshTokens table
+
             const insert = db.prepare('INSERT INTO refreshTokens (user_id, token) VALUES (?, ?)');
             insert.run(user.id, refreshToken);
         }
 
+        // Store tokens as cookies  
         res.cookie('token', accessToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 15 * 60 * 1000 }); // 15 minutes
         res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
 
@@ -86,7 +86,7 @@ router.post('/logout', (req, res) => {
     const invalidateToken = db.prepare('DELETE FROM refreshTokens WHERE token = ?');
     invalidateToken.run(refreshToken);
 
-    // Clear the client-side cookies (assuming you store tokens in cookies)
+    // Clear the cookies 
     res.clearCookie('token');
     res.clearCookie('refreshToken');
 
@@ -105,12 +105,19 @@ router.post('/refreshToken', (req, res) => {
             return res.status(403).json({ error: 'Failed to authenticate token' });
         }
 
-        // Check if refreshToken is still valid in the refreshTokens table
+        // Check if refreshToken is still valid and not expired
         const storedToken = db.prepare('SELECT token FROM refreshTokens WHERE user_id = ?').get(decoded.id).token;
         if (!storedToken || storedToken !== refreshToken) {
             return res.status(403).json({ error: 'Refresh token is not valid' });
         }
 
+        // Check token expiration
+        const currentTimestamp = Math.floor(Date.now() / 1000); // in seconds
+        if (decoded.exp && decoded.exp < currentTimestamp) {
+            return res.status(403).json({ error: 'Refresh token has expired' });
+        }
+
+        // Generate new access Token
         let accessToken;
         try {
             accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -119,11 +126,12 @@ router.post('/refreshToken', (req, res) => {
             return res.status(500).json({ error: 'Error generating access token' });
         }
 
-        // Set the new access token in a httpOnly cookie.
+        // Store the new access token in a cookie.
         res.cookie('token', accessToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 15 * 60 * 1000 }); // 15 minutes
         res.json({ message: 'Token refreshed' });
     });
 });
+
 
 
 router.get('/checkAuthStatus', authenticateJWT, (req, res) => {

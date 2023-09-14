@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // make sure it's imported from react-router-dom
+import { useNavigate } from 'react-router-dom'; 
 import { checkAuthStatus } from '../api';
 import { BeatLoader } from 'react-spinners';
 
@@ -12,11 +12,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const checkUserAuthentication = async () => {
       try {
-        const response = await checkAuthStatus(); // Call your API function
+        const response = await checkAuthStatus(); 
         setUser(response.user)
         setUserId(response.user.id);
         setUsernameLoggedIn(response.user.username);
@@ -28,15 +29,24 @@ export const AuthProvider = ({ children }) => {
         setHasCheckedAuth(true);  
         setLoading(false);
         setIsLoggedIn(false);
-        const navigate = useNavigate();
-        navigate('/login');
+        navigate('/login'); 
       }
     };
     checkUserAuthentication();
-  }, []);
+  }, [navigate]); 
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isLoggedIn, setIsLoggedIn, userId, setUserId, usernameLoggedIn, setUsernameLoggedIn, hasCheckedAuth }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      setUser, 
+      isLoggedIn, 
+      setIsLoggedIn, 
+      userId, 
+      setUserId, 
+      usernameLoggedIn, 
+      setUsernameLoggedIn, 
+      hasCheckedAuth }}>
+      
       {isLoading ? 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'black' }}>
           <BeatLoader color={"#123abc"} />
@@ -45,7 +55,6 @@ export const AuthProvider = ({ children }) => {
       }
     </AuthContext.Provider>
   );
-
 };
 
 export const useAuth = () => {

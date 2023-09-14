@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getMealById, fetchRecentUserMealIntake, deactivateMeal, updateMealName, updateMealInfo, updateMealType, updateMealServings } from '../api';
+import { getMealById, fetchRecentUserMealIntake, deactivateMeal, updateMealName, updateMealInfo, updateMealType } from '../api';
 import MealCreation from './MealCreation'; 
-import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useMeals } from '../context/MealContext';
-
 
 function MealsList() {
     const {
@@ -17,14 +15,11 @@ function MealsList() {
         newMealId,
         setNewMealId,
         refreshMeals,        
-        isDatePickerOpen,
         setDatePickerOpen,
         selectedMealId, 
         setSelectedMealId,
         addedMealName,
         setAddedMealName,
-        addedMealInfo,
-        setAddedMealInfo,
         addedMealIngredients,
         setAddedMealIngredients,
         addedMealType,
@@ -40,32 +35,27 @@ function MealsList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('all'); 
 
+    // Refresh meals and open dialog to log the newly created meal when a new meal was created 
     useEffect(() => {        
         if(newMealId) {
             refreshMeals();
-            console.log('refreshedmeals');
             setDatePickerOpen(true);
-            //handleAddButtonClick(newMealId);
             setNewMealId(null);         
         }
     }, [newMealId]);
-
+    
+    // Fetch all meals when the component mounts
     useEffect(() => {
-        // Fetch all meals when the component mounts
         refreshMeals();
-
     }, []);
 
+    //Log meal with the possibility to change it first
     const handleAddButtonClick = (mealId, mealName, mealIngredients, mealType) => {
         setSelectedMealId(mealId);
         openMealCreationModal();
         setAddedMealName(mealName);
         setAddedMealIngredients(mealIngredients);
         setAddedMealType(mealType);
-        console.log('addedMealIngredients: ', addedMealIngredients);
-        console.log('addedMealType: ', addedMealType);
-
-        //setDatePickerOpen(true);
     };
 
     const handleMealClick = (mealId) => {
@@ -84,16 +74,14 @@ function MealsList() {
         }
     };
 
-
-        async function handleDeleteMeal(mealId) {
+    async function handleDeleteMeal(mealId) {
         try {
-            // Use the deleteMeal function from api.jsx
             await deactivateMeal(mealId);
 
-            // Remove the meal from the state
+            // Remove the meal from the meals list
             const updatedMeals = meals.filter(meal => meal.id !== mealId);
             setMeals(updatedMeals);
-            fetchRecentUserMealIntake();
+            //fetchRecentUserMealIntake();
 
             toast.success("Meal deleted successfully!");
 
@@ -103,6 +91,7 @@ function MealsList() {
         }
     }       
 
+    //Editing state of field
     const startEditing = (mealId, field) => {
         setIsEditing({ field, mealId });
         const mealToEdit = meals.find(meal => meal.id === mealId);
@@ -111,9 +100,9 @@ function MealsList() {
         if (field === 'name') setEditedMealName(mealToEdit.name);
         else if (field === 'info') setEditedMealInfo(mealToEdit.info);
         else if (field === 'type') setEditedMealType(mealToEdit.meal_type);
-        else if (field === 'servings') setEditedMealServings(mealToEdit.servings);
     };
 
+    //Save changes of editing fields
     const saveChanges = async () => {
         try {
             const { field, mealId } = isEditing;
@@ -127,9 +116,6 @@ function MealsList() {
                     break;
                 case 'type':
                     await updateMealType(mealId, editedMealType);
-                    break;
-                case 'servings':
-                    await updateMealServings(mealId, editedMealServings);
                     break;
                 default:
                     throw new Error('Invalid field being edited');
@@ -147,7 +133,7 @@ function MealsList() {
             setEditedMealName('');
             setEditedMealInfo('');
             setEditedMealType('');
-            setEditedMealServings('');
+
         } catch (error) {
             console.error('Error updating meal:', error);
             toast.error("Error updating meal!");
@@ -160,7 +146,6 @@ function MealsList() {
         setEditedMealInfo('');
         setEditedMealType('');
     };    
-
 
     const filteredMeals = meals.filter(meal => {
         const isInSearch = meal.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -181,9 +166,8 @@ function MealsList() {
                     placeholder="Search for a meal..."
                 />
 
-                {/* Render meals */}
+                {/* Create new meal */}
                 <button className="btn btn-secondary" onClick={openMealCreationModal}>Create New Meal</button>
-
 
             </div>
 
@@ -199,6 +183,8 @@ function MealsList() {
                         </button>
                     ))}
                 </div>
+
+             {/* Meals List */}  
             <ul className="list-group">
                 {filteredMeals.map(meal => (
                     <div 
@@ -212,18 +198,20 @@ function MealsList() {
                     >
                     <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
-                        <button 
-                            className="btn-outline-info me-2" 
-                            onClick={() => handleMealClick(meal.id)}
-                        >
-                            {expandedMealId === meal.id ? '-' : '...'}
-                        </button>
-                        <span                                     
-                            onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
-                            className={`me-2 ${selectedMealId === meal.id ? 'font-weight-bold' : ''}`}
-                        >
-                            {meal.name}
-                        </span>
+                            {/* Expand meal with single click */}
+                            <button 
+                                className="btn-outline-info me-2" 
+                                onClick={() => handleMealClick(meal.id)}
+                            >
+                                {expandedMealId === meal.id ? '-' : '...'}
+                            </button>
+                           {/* Edit with double click */}  
+                            <span                                     
+                                onDoubleClick={() => startEditing(meal.id, 'name', meal.name)}
+                                className={`me-2 ${selectedMealId === meal.id ? 'font-weight-bold' : ''}`}
+                            >
+                                {meal.name}
+                            </span>
                         </div>
                         <div>
                         {!isEditing || (isEditing.mealId !== meal.id || (isEditing.field !== 'name' && isEditing.field !== 'servings')) ? (
@@ -231,7 +219,6 @@ function MealsList() {
                             className="btn btn-primary me-2"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                        console.log('MealType: ', meal.meal_type);
                                 handleAddButtonClick(meal.id, meal.name, meal.ingredients, meal.meal_type);
                             }}
                             >

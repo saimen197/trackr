@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getMealById, saveUserMealIntake, deleteUserMealIntake, fetchRecentUserMealIntake, deactivateMeal, updateMealName, updateMealInfo, updateMealType, updateMealServings } from '../api';
+import { getMealById, saveUserMealIntake, deleteUserMealIntake, fetchRecentUserMealIntake, deactivateMeal, updateMealName, updateMealInfo, updateMealType } from '../api';
 import MealCreation from './MealCreation';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';

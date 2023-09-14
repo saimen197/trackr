@@ -1,5 +1,6 @@
 const db = require('./database.js');
 
+//units table not really necessary to be in the database at the moment, planned to implement custom units
 function initializeDatabase() {
     try {
         db.exec(`
@@ -48,7 +49,7 @@ function initializeDatabase() {
                 name TEXT UNIQUE,
                 is_active INTEGER DEFAULT 1
             );
-
+            
             CREATE TABLE IF NOT EXISTS units (
                 id INTEGER PRIMARY KEY,
                 name TEXT UNIQUE,

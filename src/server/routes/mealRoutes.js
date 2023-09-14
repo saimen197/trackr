@@ -3,7 +3,7 @@ const db = require('../db/database.js');
 const router = express.Router();
 const { validateMeal} = require('../middleware/validationMiddleware');
 
-
+// Fetch all meals with their ingredients
 router.get('/all', (req, res, next) => {
     try {
         const mealsStmt = db.prepare('SELECT * FROM meals WHERE is_active = 1;');
@@ -41,8 +41,7 @@ router.get('/all', (req, res, next) => {
     }
 });
 
-
-// Fetch a specific meal by its ID
+// Fetch a specific meal with ingredients by its ID
 router.get('/:id', (req, res, next) => {
     const mealId = req.params.id;
 
@@ -84,7 +83,7 @@ router.get('/:id', (req, res, next) => {
 });
 
 
-// Add a new meal
+// Add a new meal with ingredients
 router.post('/add', validateMeal, (req, res, next) => {
     const { name, info, ingredients, meal_type, servings } = req.body;
     console.log(req.body);
@@ -96,7 +95,7 @@ router.post('/add', validateMeal, (req, res, next) => {
     `;
 
     try {
-        // Begin a transaction
+        // transaction because of two insertions
         db.exec('BEGIN TRANSACTION');
 
         // Insert into meals table
@@ -112,7 +111,6 @@ router.post('/add', validateMeal, (req, res, next) => {
             stmtMealIngredient.run(mealId, ingredientId, amount, unitId);
         });
 
-        // If everything went well, commit the transaction
         db.exec('COMMIT');
 
         res.status(201).send({ message: 'Meal successfully created!', mealId: mealId });
@@ -156,9 +154,8 @@ router.delete('/deactivate/:id', (req, res, next) => {
 // Update a meal's name, info, or mealType
 router.put('/update/:id', (req, res, next) => {
     const mealId = req.params.id;
-    const { name, info, mealType, servings } = req.body;
+    const { name, info, mealType } = req.body;
 
-    // Fields for updating
     const updates = [];
     const values = [];
 
@@ -177,17 +174,12 @@ router.put('/update/:id', (req, res, next) => {
         values.push(mealType);
     }
 
-    if (servings) {
-        updates.push("servings = ?");
-        values.push(servings);
-    }
-
     // If nothing to update
     if (!updates.length) {
         return res.status(400).send({ error: "No fields provided for update!" });
     }
 
-    // Prepare the SQL statement dynamically
+    // Prepare SQL statement dynamically
     const sql = `UPDATE meals SET ${updates.join(", ")} WHERE id = ?`;
     values.push(mealId);
 
@@ -206,7 +198,5 @@ router.put('/update/:id', (req, res, next) => {
         next(error);
     }
 });
-
-
 
 module.exports = router;

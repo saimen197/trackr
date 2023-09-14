@@ -4,8 +4,7 @@ import { toast } from 'react-toastify';
 import { BeatLoader } from 'react-spinners';
 import { useNavigate } from 'react-router-dom';
 
-const validateEmail = (email) => {
-    
+const validateEmail = (email) => {    
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return pattern.test(email);
 };

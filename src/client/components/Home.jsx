@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import MainComponent from './MainComponent';
 
-
 const Home = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();

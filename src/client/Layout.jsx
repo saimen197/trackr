@@ -6,7 +6,7 @@ const Layout = ({ children }) => {
     <div>
       <Navbar />
       <main>
-        {children} {/* This is where your routed components will render */}
+        {children} 
       </main>      
     </div>
   );
